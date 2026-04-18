@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  font-family:'Segoe UI';
+  background:#eef2f7;
+  margin:0;
+}
+
+/* MENU */
+.menu{
+  display:flex;
+  background:#1f2937;
+}
+
+.menu button{
+  flex:1;
+  padding:12px;
+  background:none;
+  color:#fff;
+  border:none;
+  cursor:pointer;
+}
+
+.menu button.active{
+  background:#007bff;
+}
+
+/* SECTION */
+.section{display:none; padding:20px;}
+.section.active{display:block;}
+
+.container{max-width:900px;margin:auto;}
+
+.card{
+  background:#fff;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:15px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.1);
+}
+
+input{
+  padding:10px;
+  width:70%;
+}
+
+button{
+  padding:10px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.add{background:#28a745;color:#fff;}
+.delete{background:#dc3545;color:#fff;}
+.edit{background:#ffc107;}
+
+ul{
+  list-style:none;
+  padding:0;
+}
+
+li{
+  background:#f8f9fa;
+  margin:5px 0;
+  padding:10px;
+  border-radius:6px;
+  display:flex;
+  justify-content:space-between;
+}
+</style>
+</head>
+
+<body>
+
+<div class="menu">
+  <button class="active" onclick="show('party',this)">Party</button>
+  <button onclick="show('fabric',this)">Fabric</button>
+  <button onclick="show('sku',this)">SKU</button>
+  <button onclick="show('labour',this)">Labour</button>
+</div>
+
+<!-- PARTY -->
+<div id="party" class="section active">
+<div class="container">
+<div class="card">
+<input id="partyInput" placeholder="Party Name">
+<button class="add" onclick="addItem('party')">Add</button>
+</div>
+<ul id="partyList"></ul>
+</div>
+</div>
+
+<!-- FABRIC -->
+<div id="fabric" class="section">
+<div class="container">
+<div class="card">
+<input id="fabricInput" placeholder="Fabric Name">
+<button class="add" onclick="addItem('fabric')">Add</button>
+</div>
+<ul id="fabricList"></ul>
+</div>
+</div>
+
+<!-- SKU -->
+<div id="sku" class="section">
+<div class="container">
+<div class="card">
+<input id="skuInput" placeholder="SKU Name">
+<button class="add" onclick="addItem('sku')">Add</button>
+</div>
+<ul id="skuList"></ul>
+</div>
+</div>
+
+<!-- LABOUR -->
+<div id="labour" class="section">
+<div class="container">
+<div class="card">
+<input id="labourInput" placeholder="Labour Name">
+<button class="add" onclick="addItem('labour')">Add</button>
+</div>
+<ul id="labourList"></ul>
+</div>
+</div>
+
+<script>
+
+// STORAGE KEYS
+const keys = {
+  party:"ledger_party",
+  fabric:"ledger_fabric",
+  sku:"ledger_sku",
+  labour:"ledger_labour"
+};
+
+// LOAD
+function load(type){
+  return JSON.parse(localStorage.getItem(keys[type])) || [];
+}
+
+// SAVE
+function save(type,data){
+  localStorage.setItem(keys[type],JSON.stringify(data));
+}
+
+// SHOW SECTION
+function show(id,btn){
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+
+  document.querySelectorAll(".menu button").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+}
+
+// ADD
+function addItem(type){
+  let input=document.getElementById(type+"Input");
+  let val=input.value.trim();
+
+  if(!val){ alert("Enter value"); return; }
+
+  let data=load(type);
+  data.push(val);
+
+  save(type,data);
+  input.value="";
+  render(type);
+}
+
+// DELETE
+function deleteItem(type,i){
+  let data=load(type);
+  data.splice(i,1);
+  save(type,data);
+  render(type);
+}
+
+// EDIT
+function editItem(type,i){
+  let data=load(type);
+  let val=prompt("Edit",data[i]);
+
+  if(val){
+    data[i]=val;
+    save(type,data);
+    render(type);
+  }
+}
+
+// RENDER
+function render(type){
+  let list=document.getElementById(type+"List");
+  let data=load(type);
+
+  list.innerHTML="";
+
+  data.forEach((d,i)=>{
+    list.innerHTML+=`
+      <li>
+        ${d}
+        <div>
+          <button class="edit" onclick="editItem('${type}',${i})">Edit</button>
+          <button class="delete" onclick="deleteItem('${type}',${i})">Delete</button>
+        </div>
+      </li>
+    `;
+  });
+}
+
+// INIT
+["party","fabric","sku","labour"].forEach(render);
+
+</script>
+
+</body>
+</html>
