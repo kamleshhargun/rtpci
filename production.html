@@ -1,352 +1,291 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Production ERP</title>
 
 <style>
-/* ===== GLOBAL ===== */
-body {
-  font-family: 'Segoe UI', Arial;
-  margin: 0;
-  background: linear-gradient(135deg,#eef2f7,#dfe9f3);
-  color:#333;
-}
+body{font-family:Arial;margin:0;background:#f4f6f9;}
+.menu{display:flex;background:#111;}
+.menu a{flex:1;padding:12px;color:#fff;text-align:center;cursor:pointer;}
+.menu a.active{background:#007bff;}
 
-/* ===== TOP MENU ===== */
-.menu {
-  display:flex;
-  flex-wrap:wrap;
-  background:#1f2937;
-  box-shadow:0 2px 8px rgba(0,0,0,0.15);
-}
+.section{display:none;padding:20px;}
+.section.active{display:block;}
 
-.menu a {
-  flex:1;
-  padding:12px;
-  text-align:center;
-  color:#e5e7eb;
-  text-decoration:none;
-  cursor:pointer;
-  transition:0.3s;
-  font-weight:500;
-}
+.container{max-width:1200px;margin:auto;}
+.box{background:#fff;padding:15px;border-radius:10px;margin-bottom:15px;}
 
-.menu a:hover {
-  background:#374151;
-}
+input,select{padding:8px;margin:5px;}
+button{padding:8px 12px;border:none;color:#fff;border-radius:5px;cursor:pointer;}
+.add{background:green;}
+.save{background:black;}
+.delete{background:red;}
+.edit{background:orange;}
 
-.menu a.active {
-  background:#007bff;
-  color:#fff;
-  font-weight:600;
-}
-
-/* ===== SECTION ===== */
-.section {
-  display:none;
-  padding:20px;
-  animation:fadeIn 0.3s ease;
-}
-
-.section.active {
-  display:block;
-}
-
-@keyframes fadeIn {
-  from {opacity:0; transform:translateY(10px);}
-  to {opacity:1; transform:translateY(0);}
-}
-
-/* ===== CONTAINER ===== */
-.container {
-  max-width:1200px;
-  margin:auto;
-}
-
-/* ===== HEADINGS ===== */
-h1 {
-  text-align:center;
-  margin-bottom:15px;
-  color:#1f2937;
-}
-
-/* ===== FORM BOX ===== */
-.form-box {
-  background:#fff;
-  padding:18px;
-  border-radius:14px;
-  margin-bottom:20px;
-  box-shadow:0 6px 18px rgba(0,0,0,0.08);
-}
-
-/* ===== INPUT ===== */
-input, select {
-  padding:10px;
-  margin:6px;
-  border-radius:8px;
-  border:1px solid #ccc;
-  transition:0.2s;
-}
-
-input:focus, select:focus {
-  outline:none;
-  border-color:#007bff;
-  box-shadow:0 0 5px rgba(0,123,255,0.3);
-}
-
-/* ===== BUTTON ===== */
-button {
-  padding:9px 14px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-  font-weight:600;
-  transition:0.2s;
-}
-
-button:hover {
-  transform:translateY(-1px);
-  opacity:0.9;
-}
-
-.add-btn { background:#28a745;}
-.delete-btn { background:#dc3545;}
-.edit-btn { background:#ffc107; color:#000;}
-.save-btn { background:#111827;}
-
-/* ===== TABLE ===== */
-table {
-  width:100%;
-  border-collapse:collapse;
-  background:#fff;
-  border-radius:12px;
-  overflow:hidden;
-  box-shadow:0 6px 18px rgba(0,0,0,0.08);
-}
-
-th {
-  background:#1f2937;
-  color:#fff;
-}
-
-th, td {
-  border:1px solid #eee;
-  padding:12px;
-  text-align:center;
-}
-
-tr:hover {
-  background:#f9fafb;
-}
-
-/* ===== DRAWER ===== */
-.drawer {
-  display:none;
-  background:#f3f4f6;
-}
-
-/* ===== MOBILE ===== */
-@media(max-width:768px){
-
-  .menu a {
-    flex:50%;
-    font-size:12px;
-  }
-
-  .form-box {
-    padding:12px;
-  }
-
-  input, select {
-    width:95%;
-  }
-
-}
+table{width:100%;border-collapse:collapse;background:#fff;}
+th,td{border:1px solid #ddd;padding:10px;text-align:center;}
+.drawer{display:none;background:#fafafa;}
 </style>
 </head>
 
 <body>
 
-<!-- MENU -->
 <div class="menu">
-  <a class="active" onclick="showPage('fabric')">Fabric</a>
-  <a onclick="showPage('cutting')">Cutting</a>
-  <a onclick="showPage('stitching')">Stitching</a>
-  <a onclick="showPage('finished')">Finished</a>
+<a class="active" onclick="openTab('fabric',this)">Fabric</a>
+<a onclick="openTab('cutting',this)">Cutting</a>
+<a onclick="openTab('stitching',this)">Stitching</a>
+<a onclick="openTab('finished',this)">Finished</a>
 </div>
 
 <!-- ================= FABRIC ================= -->
 <div id="fabric" class="section active">
 <div class="container">
-<h1>Fabric Purchase</h1>
 
-<div class="form-box">
-<input id="party" placeholder="Party">
-<input id="invoice" placeholder="Invoice">
-<input type="date" id="fdate">
-<input id="gst" placeholder="GST %">
+<div class="box">
+<h3>Fabric Purchase</h3>
 
-<div id="fabricContainer"></div>
+<select id="party"></select>
+<select id="fabricSelect"></select>
+<input id="meter" placeholder="Meter">
+<button class="save" onclick="saveFabric()">Save</button>
 
-<button class="add-btn" onclick="addFabricRow()">+ Add Fabric</button>
-<button class="save-btn" onclick="saveInvoice()">Save</button>
 </div>
 
 <table>
 <thead><tr>
-<th>Party</th><th>Invoice</th><th>Date</th><th>Total</th><th>Action</th>
+<th>Party</th><th>Fabric</th><th>Meter</th><th>Action</th>
 </tr></thead>
 <tbody id="fabricTable"></tbody>
 </table>
+
 </div>
 </div>
 
 <!-- ================= CUTTING ================= -->
 <div id="cutting" class="section">
 <div class="container">
-<h1>Cutting</h1>
 
-<div class="form-box">
-<select id="fabricSelect"></select>
-<input type="date" id="cdate">
+<div class="box">
+<h3>Cutting</h3>
 
-<div id="skuContainer"></div>
-<button class="add-btn" onclick="addSkuRow()">+ SKU</button>
+<select id="cutFabric"></select>
+<input id="cutSku" list="skuList">
+<datalist id="skuList"></datalist>
+<input id="cutQty" placeholder="Qty">
+<button class="save" onclick="saveCutting()">Save</button>
 
-<input id="meter" placeholder="Meter Used">
-<button class="save-btn" onclick="saveCutting()">Save</button>
 </div>
 
 <table>
-<tbody id="cuttingTable"></tbody>
+<thead><tr>
+<th>Fabric</th><th>SKU</th><th>Qty</th>
+</tr></thead>
+<tbody id="cutTable"></tbody>
 </table>
+
 </div>
 </div>
 
 <!-- ================= STITCHING ================= -->
 <div id="stitching" class="section">
 <div class="container">
-<h1>Stitching</h1>
 
-<div class="form-box">
-<input type="date" id="sdate">
-<input id="labour" placeholder="Labour">
+<div class="box">
+<h3>Stitching</h3>
 
-<div id="entryContainer"></div>
-<button class="add-btn" onclick="addRow()">+ Add</button>
+<select id="labour"></select>
+<input id="stitchSku" list="skuList2">
+<datalist id="skuList2"></datalist>
+<input id="stitchQty" placeholder="Qty">
+<button class="save" onclick="saveStitching()">Save</button>
 
-<button class="save-btn" onclick="saveStitching()">Save</button>
 </div>
 
 <table>
-<tbody id="stitchingTable"></tbody>
+<thead><tr>
+<th>Labour</th><th>SKU</th><th>Qty</th>
+</tr></thead>
+<tbody id="stitchTable"></tbody>
 </table>
+
 </div>
 </div>
 
 <!-- ================= FINISHED ================= -->
 <div id="finished" class="section">
 <div class="container">
-<h1>Finished</h1>
 
-<div class="form-box">
-<input type="date" id="fndate">
-<select id="labourSelect" onchange="loadPending()"></select>
+<div class="box">
+<h3>Finished Goods</h3>
 
-<div id="finishContainer"></div>
+<select id="labour2"></select>
+<input id="finishSku">
+<input id="finishQty" placeholder="Qty">
+<button class="save" onclick="saveFinished()">Save</button>
 
-<button class="save-btn" onclick="saveFinished()">Save</button>
 </div>
 
 <table>
-<tbody id="finishedTable"></tbody>
+<thead><tr>
+<th>Labour</th><th>SKU</th><th>Qty</th>
+</tr></thead>
+<tbody id="finishTable"></tbody>
 </table>
+
 </div>
 </div>
 
 <script>
 
-// NAVIGATION
-function showPage(id){
-  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
+// ================= TAB =================
+function openTab(id,el){
+document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
 
-  document.querySelectorAll(".menu a").forEach(a=>a.classList.remove("active"));
-  event.target.classList.add("active");
+document.querySelectorAll(".menu a").forEach(a=>a.classList.remove("active"));
+el.classList.add("active");
 }
 
-// STORAGE
-let fabricData = JSON.parse(localStorage.getItem("fabric")) || [];
-let cuttingData = JSON.parse(localStorage.getItem("cutting")) || [];
-let stitchingData = JSON.parse(localStorage.getItem("stitching")) || [];
-let finishedData = JSON.parse(localStorage.getItem("finished")) || [];
+// ================= LEDGER =================
+function loadLedger(){
+let parties=JSON.parse(localStorage.getItem("parties"))||[];
+let fabrics=JSON.parse(localStorage.getItem("fabrics"))||[];
+let skus=JSON.parse(localStorage.getItem("skus"))||[];
+let labours=JSON.parse(localStorage.getItem("labours"))||[];
 
-/* ================= FABRIC ================= */
-function addFabricRow(){
-  let div=document.createElement("div");
-  div.innerHTML=`<input class="name"><input class="meter"><input class="rate">`;
-  fabricContainer.appendChild(div);
+party.innerHTML=parties.map(p=>`<option>${p}</option>`).join("");
+fabricSelect.innerHTML=fabrics.map(f=>`<option>${f}</option>`).join("");
+cutFabric.innerHTML=fabrics.map(f=>`<option>${f}</option>`).join("");
+
+skuList.innerHTML=skus.map(s=>`<option value="${s}">`).join("");
+skuList2.innerHTML=skus.map(s=>`<option value="${s}">`).join("");
+
+labour.innerHTML=labours.map(l=>`<option>${l}</option>`).join("");
+labour2.innerHTML=labours.map(l=>`<option>${l}</option>`).join("");
 }
 
-function saveInvoice(){
-  let fabrics=[];
-  let total=0;
+// ================= STORAGE =================
+let fabricData=JSON.parse(localStorage.getItem("fabricData"))||[];
+let cuttingData=JSON.parse(localStorage.getItem("cuttingData"))||[];
+let stitchingData=JSON.parse(localStorage.getItem("stitchingData"))||[];
+let finishedData=JSON.parse(localStorage.getItem("finishedData"))||[];
 
-  document.querySelectorAll("#fabricContainer div").forEach(r=>{
-    let m=r.children[1].value;
-    let rate=r.children[2].value;
-    let amt=m*rate;
-    total+=amt;
-    fabrics.push({m,rate});
-  });
+// ================= FABRIC =================
+function saveFabric(){
+let obj={
+party:party.value,
+fabric:fabricSelect.value,
+meter:Number(meter.value)
+};
 
-  fabricData.push({party:party.value,invoice:invoice.value,date:fdate.value,total,fabrics});
-  localStorage.setItem("fabric",JSON.stringify(fabricData));
-  renderFabric();
+fabricData.push(obj);
+localStorage.setItem("fabricData",JSON.stringify(fabricData));
+renderFabric();
 }
 
 function renderFabric(){
-  fabricTable.innerHTML="";
-  fabricData.forEach(f=>{
-    fabricTable.innerHTML+=`<tr><td>${f.party}</td><td>${f.invoice}</td><td>${f.date}</td><td>${f.total}</td></tr>`;
-  });
+fabricTable.innerHTML="";
+fabricData.forEach((f,i)=>{
+fabricTable.innerHTML+=`
+<tr>
+<td>${f.party}</td>
+<td>${f.fabric}</td>
+<td>${f.meter}</td>
+<td><button class="delete" onclick="deleteFabric(${i})">X</button></td>
+</tr>`;
+});
 }
 
-/* ================= CUTTING ================= */
-function addSkuRow(){
-  let div=document.createElement("div");
-  div.innerHTML=`<input class="sku"><input class="qty">`;
-  skuContainer.appendChild(div);
-}
-
-function saveCutting(){
-  cuttingData.push({fabric:fabricSelect.value,date:cdate.value});
-  localStorage.setItem("cutting",JSON.stringify(cuttingData));
-}
-
-/* ================= STITCHING ================= */
-function addRow(){
-  let div=document.createElement("div");
-  div.innerHTML=`<input class="item"><input class="qty">`;
-  entryContainer.appendChild(div);
-}
-
-function saveStitching(){
-  stitchingData.push({labour:labour.value,date:sdate.value});
-  localStorage.setItem("stitching",JSON.stringify(stitchingData));
-}
-
-/* ================= FINISHED ================= */
-function loadPending(){
-  finishContainer.innerHTML="Pending loaded...";
-}
-
-function saveFinished(){
-  finishedData.push({date:fndate.value});
-  localStorage.setItem("finished",JSON.stringify(finishedData));
-}
-
+function deleteFabric(i){
+fabricData.splice(i,1);
+localStorage.setItem("fabricData",JSON.stringify(fabricData));
 renderFabric();
+}
+
+// ================= CUTTING =================
+function saveCutting(){
+let obj={
+fabric:cutFabric.value,
+sku:cutSku.value,
+qty:Number(cutQty.value)
+};
+
+cuttingData.push(obj);
+localStorage.setItem("cuttingData",JSON.stringify(cuttingData));
+renderCut();
+}
+
+function renderCut(){
+cutTable.innerHTML="";
+cuttingData.forEach(c=>{
+cutTable.innerHTML+=`
+<tr>
+<td>${c.fabric}</td>
+<td>${c.sku}</td>
+<td>${c.qty}</td>
+</tr>`;
+});
+}
+
+// ================= STITCHING =================
+function saveStitching(){
+let obj={
+labour:labour.value,
+sku:stitchSku.value,
+qty:Number(stitchQty.value)
+};
+
+stitchingData.push(obj);
+localStorage.setItem("stitchingData",JSON.stringify(stitchingData));
+renderStitch();
+}
+
+function renderStitch(){
+stitchTable.innerHTML="";
+stitchingData.forEach(s=>{
+stitchTable.innerHTML+=`
+<tr>
+<td>${s.labour}</td>
+<td>${s.sku}</td>
+<td>${s.qty}</td>
+</tr>`;
+});
+}
+
+// ================= FINISHED =================
+function saveFinished(){
+let obj={
+labour:labour2.value,
+sku:finishSku.value,
+qty:Number(finishQty.value)
+};
+
+finishedData.push(obj);
+localStorage.setItem("finishedData",JSON.stringify(finishedData));
+renderFinish();
+}
+
+function renderFinish(){
+finishTable.innerHTML="";
+finishedData.forEach(f=>{
+finishTable.innerHTML+=`
+<tr>
+<td>${f.labour}</td>
+<td>${f.sku}</td>
+<td>${f.qty}</td>
+</tr>`;
+});
+}
+
+// ================= INIT =================
+loadLedger();
+renderFabric();
+renderCut();
+renderStitch();
+renderFinish();
+
+window.addEventListener("focus",loadLedger);
 
 </script>
 
