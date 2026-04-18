@@ -4,84 +4,164 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+/* ===== GLOBAL ===== */
 body {
-  font-family: Arial;
+  font-family: 'Segoe UI', Arial;
   margin: 0;
-  background:#f4f6f9;
+  background: linear-gradient(135deg,#eef2f7,#dfe9f3);
+  color:#333;
 }
 
-/* TOP MENU */
+/* ===== TOP MENU ===== */
 .menu {
   display:flex;
   flex-wrap:wrap;
-  background:#111;
+  background:#1f2937;
+  box-shadow:0 2px 8px rgba(0,0,0,0.15);
 }
 
 .menu a {
   flex:1;
   padding:12px;
   text-align:center;
-  color:#fff;
+  color:#e5e7eb;
   text-decoration:none;
   cursor:pointer;
+  transition:0.3s;
+  font-weight:500;
+}
+
+.menu a:hover {
+  background:#374151;
 }
 
 .menu a.active {
   background:#007bff;
+  color:#fff;
+  font-weight:600;
 }
 
-/* SECTION */
+/* ===== SECTION ===== */
 .section {
   display:none;
   padding:20px;
+  animation:fadeIn 0.3s ease;
 }
 
 .section.active {
   display:block;
 }
 
-/* COMMON */
-.container { max-width:1200px; margin:auto;}
-h1 { text-align:center;}
+@keyframes fadeIn {
+  from {opacity:0; transform:translateY(10px);}
+  to {opacity:1; transform:translateY(0);}
+}
 
+/* ===== CONTAINER ===== */
+.container {
+  max-width:1200px;
+  margin:auto;
+}
+
+/* ===== HEADINGS ===== */
+h1 {
+  text-align:center;
+  margin-bottom:15px;
+  color:#1f2937;
+}
+
+/* ===== FORM BOX ===== */
 .form-box {
   background:#fff;
-  padding:15px;
-  border-radius:10px;
+  padding:18px;
+  border-radius:14px;
   margin-bottom:20px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.08);
 }
 
+/* ===== INPUT ===== */
 input, select {
-  padding:8px;
-  margin:5px;
+  padding:10px;
+  margin:6px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  transition:0.2s;
 }
 
+input:focus, select:focus {
+  outline:none;
+  border-color:#007bff;
+  box-shadow:0 0 5px rgba(0,123,255,0.3);
+}
+
+/* ===== BUTTON ===== */
 button {
-  padding:8px 12px;
+  padding:9px 14px;
   border:none;
-  color:white;
-  border-radius:5px;
+  border-radius:8px;
   cursor:pointer;
+  font-weight:600;
+  transition:0.2s;
 }
 
-.add-btn { background:green;}
-.delete-btn { background:red;}
-.edit-btn { background:orange;}
-.save-btn { background:black;}
+button:hover {
+  transform:translateY(-1px);
+  opacity:0.9;
+}
 
+.add-btn { background:#28a745;}
+.delete-btn { background:#dc3545;}
+.edit-btn { background:#ffc107; color:#000;}
+.save-btn { background:#111827;}
+
+/* ===== TABLE ===== */
 table {
   width:100%;
   border-collapse:collapse;
   background:#fff;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 6px 18px rgba(0,0,0,0.08);
+}
+
+th {
+  background:#1f2937;
+  color:#fff;
 }
 
 th, td {
-  border:1px solid #ddd;
-  padding:10px;
+  border:1px solid #eee;
+  padding:12px;
   text-align:center;
 }
 
-.drawer { display:none; background:#fafafa;}
+tr:hover {
+  background:#f9fafb;
+}
+
+/* ===== DRAWER ===== */
+.drawer {
+  display:none;
+  background:#f3f4f6;
+}
+
+/* ===== MOBILE ===== */
+@media(max-width:768px){
+
+  .menu a {
+    flex:50%;
+    font-size:12px;
+  }
+
+  .form-box {
+    padding:12px;
+  }
+
+  input, select {
+    width:95%;
+  }
+
+}
 </style>
 </head>
 
