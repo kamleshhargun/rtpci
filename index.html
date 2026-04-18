@@ -1,77 +1,145 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>KONE ERP SYSTEM</title>
 
 <style>
 
-/* BODY */
-body {
-  margin: 0;
+/* ===== RESET ===== */
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
   font-family: 'Segoe UI', Arial;
-  background: linear-gradient(135deg, #eef2f7, #dfe9f3);
 }
 
-/* HEADER */
-.header {
-  background: linear-gradient(135deg, #1f2937, #111827);
-  color: #fff;
-  padding: 14px;
-  text-align: center;
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+/* ===== BODY ===== */
+body{
+  display:flex;
+  height:100vh;
+  background:#f5f7fb;
 }
 
-/* NAVBAR */
-nav {
-  display: flex;
-  flex-wrap: wrap;
-  background: #ffffff;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+/* ===== SIDEBAR ===== */
+.sidebar{
+  width:240px;
+  background:#5a2d82;
+  color:#fff;
+  padding:20px 10px;
 }
 
-/* NAV BUTTON */
-nav a {
-  flex: 1;
-  padding: 12px;
-  text-align: center;
-  text-decoration: none;
-  font-size: 13px;
-  color: #333;
-  border: 1px solid #eee;
-  transition: 0.3s;
+.sidebar h2{
+  text-align:center;
+  margin-bottom:20px;
 }
 
-/* HOVER */
-nav a:hover {
-  background: #007bff;
-  color: #fff;
+.menu a{
+  display:block;
+  padding:12px;
+  color:#fff;
+  text-decoration:none;
+  border-radius:8px;
+  margin-bottom:8px;
+  transition:0.3s;
 }
 
-/* ACTIVE TAB */
-nav a.active {
-  background: #007bff;
-  color: #fff;
-  font-weight: bold;
+.menu a:hover,
+.menu a.active{
+  background:#7c3aed;
 }
 
-/* FRAME */
-iframe {
-  width: 100%;
-  height: calc(100vh - 105px);
-  border: none;
-  background: transparent;
+/* ===== MAIN ===== */
+.main{
+  flex:1;
+  display:flex;
+  flex-direction:column;
 }
 
-/* MOBILE */
-@media (max-width: 768px) {
-  nav a {
-    flex: 50%;
-    font-size: 12px;
-    padding: 10px;
+/* ===== TOP BAR ===== */
+.topbar{
+  background:#fff;
+  padding:12px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+
+.topbar h3{
+  font-weight:600;
+}
+
+/* ===== CONTENT ===== */
+.content{
+  padding:20px;
+  overflow:auto;
+}
+
+/* ===== CARDS ===== */
+.cards{
+  display:flex;
+  flex-wrap:wrap;
+  gap:15px;
+}
+
+.card{
+  flex:1;
+  min-width:200px;
+  background:#fff;
+  padding:15px;
+  border-radius:12px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.08);
+  text-align:center;
+}
+
+.card h4{
+  font-size:14px;
+  margin-bottom:8px;
+}
+
+.big{
+  font-size:22px;
+  font-weight:bold;
+  color:#007bff;
+}
+
+/* ===== STATS SMALL ===== */
+.small-stats{
+  margin-top:15px;
+  display:flex;
+  gap:20px;
+}
+
+/* ===== QUICK ACCESS ===== */
+.quick{
+  margin-top:25px;
+}
+
+.quick .card{
+  cursor:pointer;
+  background:#eef2ff;
+}
+
+/* ===== MOBILE ===== */
+@media(max-width:768px){
+
+  .sidebar{
+    width:70px;
   }
+
+  .sidebar h2{
+    display:none;
+  }
+
+  .menu a{
+    text-align:center;
+    font-size:12px;
+    padding:10px 5px;
+  }
+
 }
 
 </style>
@@ -79,30 +147,141 @@ iframe {
 
 <body>
 
-<div class="header">📦 KONE ERP SYSTEM</div>
+<!-- ===== SIDEBAR ===== -->
+<div class="sidebar">
+  <h2>📦 ERP</h2>
 
-<nav>
-  <a href="dashboard.html" target="frame" onclick="setActive(this)" class="active">Home</a>
-  <a href="daily.html" target="frame" onclick="setActive(this)">Daily</a>
-  <a href="lookup.html" target="frame" onclick="setActive(this)">Lookup</a>
-  <a href="tracking.html" target="frame" onclick="setActive(this)">Tracking</a>
-  <a href="return-request.html" target="frame" onclick="setActive(this)">Return</a>
-  <a href="fabric.html" target="frame" onclick="setActive(this)">Fabric</a>
-  <a href="cutting.html" target="frame" onclick="setActive(this)">Cutting</a>
-  <a href="stitching.html" target="frame" onclick="setActive(this)">Stitching</a>
-  <a href="finished.html" target="frame" onclick="setActive(this)">Finished</a>
-</nav>
+  <div class="menu">
+    <a class="active" onclick="loadPage('home')">Home</a>
+    <a onclick="loadPage('daily')">Daily</a>
+    <a onclick="loadPage('lookup')">Lookup</a>
+    <a onclick="loadPage('tracking')">Tracking</a>
+    <a onclick="loadPage('return')">Return</a>
+    <a onclick="loadPage('fabric')">Fabric</a>
+    <a onclick="loadPage('cutting')">Cutting</a>
+    <a onclick="loadPage('stitching')">Stitching</a>
+    <a onclick="loadPage('finished')">Finished</a>
+  </div>
+</div>
 
-<!-- IFRAME -->
-<iframe name="frame" src="dashboard.html"></iframe>
+<!-- ===== MAIN ===== -->
+<div class="main">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <h3 id="pageTitle">🏠 Dashboard</h3>
+    <div>👤 Admin</div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content" id="content">
+
+    <!-- DASHBOARD -->
+    <div id="homePage">
+
+      <h3>Daily Stats</h3><br>
+
+      <div class="cards">
+        <div class="card">
+          <h4>Pickup Today</h4>
+          <div class="big" id="pickup_today">0</div>
+        </div>
+
+        <div class="card">
+          <h4>Return Today</h4>
+          <div class="big" id="return_today">0</div>
+        </div>
+
+        <div class="card">
+          <h4>Pickup Yesterday</h4>
+          <div class="big" id="pickup_yesterday">0</div>
+        </div>
+
+        <div class="card">
+          <h4>Return Yesterday</h4>
+          <div class="big" id="return_yesterday">0</div>
+        </div>
+
+        <div class="card">
+          <h4>Total Pickup</h4>
+          <div class="big" id="pickup_total">0</div>
+        </div>
+
+        <div class="card">
+          <h4>Total Return</h4>
+          <div class="big" id="return_total">0</div>
+        </div>
+      </div>
+
+      <div class="small-stats">
+        <div>Saved: <b id="saved_count">0</b></div>
+        <div>Pending: <b id="pending_count">0</b></div>
+      </div>
+
+      <!-- QUICK -->
+      <div class="quick">
+        <h3>Quick Access</h3><br>
+
+        <div class="cards">
+          <div class="card" onclick="loadPage('daily')">Daily</div>
+          <div class="card" onclick="loadPage('lookup')">Lookup</div>
+          <div class="card" onclick="loadPage('tracking')">Tracking</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== SCRIPT ===== -->
+<script src="config.js"></script>
 
 <script>
 
-// ACTIVE TAB HIGHLIGHT
-function setActive(el){
-  document.querySelectorAll("nav a").forEach(a=>a.classList.remove("active"));
-  el.classList.add("active");
+// ===== PAGE SWITCH =====
+function loadPage(page){
+
+  document.querySelectorAll(".menu a").forEach(a=>a.classList.remove("active"));
+  event.target.classList.add("active");
+
+  document.getElementById("pageTitle").innerText = page.toUpperCase();
+
+  if(page === "home"){
+    document.getElementById("homePage").style.display="block";
+  }else{
+    alert(page + " page banani baaki hai 😄");
+  }
+
 }
+
+// ===== DASHBOARD API =====
+function loadDashboard(){
+
+fetch(API.stats)
+.then(res => res.json())
+.then(d => {
+
+  pickup_today.innerText = d.todayPickup || 0;
+  return_today.innerText = d.todayReturn || 0;
+
+  pickup_yesterday.innerText = d.yesterdayPickup || 0;
+  return_yesterday.innerText = d.yesterdayReturn || 0;
+
+  pickup_total.innerText = d.totalPickup || 0;
+  return_total.innerText = d.totalReturn || 0;
+
+  saved_count.innerText = d.saved || 0;
+  pending_count.innerText = d.pending || 0;
+
+})
+.catch(err => console.log(err));
+
+}
+
+// AUTO REFRESH
+setInterval(loadDashboard,5000);
+loadDashboard();
 
 </script>
 
