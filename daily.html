@@ -5,45 +5,39 @@
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
-body {
-  font-family: 'Segoe UI', Arial;
-  background: linear-gradient(135deg, #eef2f7, #dfe9f3);
-  margin: 0;
-  text-align: center;
+body{
+  font-family:'Segoe UI', Arial;
+  background:linear-gradient(135deg,#eef2f7,#dfe9f3);
+  margin:0;
+  text-align:center;
 }
-
-.container {
-  max-width: 420px;
-  margin: auto;
-  padding: 15px;
+.container{
+  max-width:420px;
+  margin:auto;
+  padding:15px;
 }
-
-.card {
+.card{
   background:#fff;
   padding:15px;
-  border-radius:12px;
+  border-radius:14px;
   margin-bottom:12px;
   box-shadow:0 6px 18px rgba(0,0,0,0.08);
 }
-
-button {
+button{
   width:100%;
   padding:10px;
   margin-top:8px;
   border:none;
   border-radius:10px;
-  cursor:pointer;
   font-weight:600;
+  cursor:pointer;
 }
-
 .start{background:#28a745;color:#fff;}
 .stop{background:#dc3545;color:#fff;}
 .manual{background:#444;color:#fff;}
 .search{background:#6f42c1;color:#fff;}
-
 .mode-btn{background:#eee;}
 .mode-btn.active{background:#007bff;color:#fff;}
-
 input{
   width:100%;
   padding:10px;
@@ -51,11 +45,15 @@ input{
   border-radius:8px;
   border:1px solid #ccc;
 }
-
 .stat{display:flex;justify-content:space-between;}
-.stat div{flex:1;background:#f8f9fa;margin:3px;padding:8px;border-radius:8px;}
+.stat div{
+  flex:1;
+  background:#f8f9fa;
+  margin:3px;
+  padding:8px;
+  border-radius:8px;
+}
 .stat span{font-weight:bold;color:#007bff;}
-
 #manualBox,#extraBox,#saveBtn{display:none;}
 </style>
 </head>
@@ -64,11 +62,11 @@ input{
 
 <div class="container">
 
-<h2>📦 ERP Daily System</h2>
+<h2>📦 Daily System</h2>
 
 <button onclick="refreshPage()">🔄 Refresh</button>
 
-<!-- ================= DASHBOARD ================= -->
+<!-- ===== DASHBOARD ===== -->
 <div class="card">
 <h3>📊 Dashboard</h3>
 
@@ -88,13 +86,13 @@ input{
 </div>
 </div>
 
-<!-- ================= MODE ================= -->
+<!-- ===== MODE ===== -->
 <div class="card">
 <button id="pickupBtn" class="mode-btn active" onclick="setMode('Pickup')">Pickup</button>
 <button id="returnBtn" class="mode-btn" onclick="setMode('Return')">Return</button>
 </div>
 
-<!-- ================= SCANNER ================= -->
+<!-- ===== SCANNER ===== -->
 <div class="card">
 <div id="reader"></div>
 
@@ -105,22 +103,22 @@ input{
 <div id="status">Ready...</div>
 </div>
 
-<!-- MANUAL -->
+<!-- ===== MANUAL ===== -->
 <div class="card" id="manualBox">
 <input id="manualOrder" placeholder="Order ID">
 <input id="manualTracking" placeholder="Tracking ID">
 <button onclick="submitManual()">Submit</button>
 </div>
 
-<!-- ================= LOOKUP ================= -->
+<!-- ===== LOOKUP ===== -->
 <div class="card">
 <h3>🔍 Lookup</h3>
 <input id="lookupOrder" placeholder="Order ID">
 <button class="search" onclick="lookup()">Search</button>
-<div id="lookupResult">Enter Order</div>
+<div id="lookupResult">Enter Order ID</div>
 </div>
 
-<!-- ================= TRACKING ================= -->
+<!-- ===== TRACKING ===== -->
 <div class="card">
 <h3>📦 Tracking</h3>
 
@@ -148,6 +146,7 @@ input{
 
 <script>
 
+// ===== GLOBAL =====
 let html5QrCode, orderId="", mode="Pickup", trackingData=null;
 let step="order";
 
@@ -199,11 +198,21 @@ if(html5QrCode) html5QrCode.stop().catch(()=>{});
 }
 
 // ===== MANUAL =====
-function openManual(){manualBox.style.display="block";}
+function openManual(){
+manualBox.style.display="block";
+setTimeout(()=>manualOrder.focus(),100);
+}
+
 function submitManual(){
 let o=manualOrder.value.trim();
 let t=manualTracking.value.trim();
-if(!o||!t)return alert("Fill both");
+
+if(!o||!t){
+alert("Fill both");
+return;
+}
+
+beep.play();
 sendData(o,t);
 resetFlow();
 }
@@ -215,22 +224,42 @@ manualOrder.value="";
 manualTracking.value="";
 manualBox.style.display="none";
 status.innerText="Ready...";
+status.style.color="black";
 document.querySelector(".start").innerText="Start";
 step="order";
 }
 
 // ===== SEND =====
 function sendData(o,t){
+
 fetch(API.post,{
 method:"POST",
-body:JSON.stringify({mode:mode.toLowerCase(),order_id:o,tracking:t})
+body:JSON.stringify({
+mode:mode.toLowerCase(),
+order_id:o,
+tracking:t
+})
 })
 .then(r=>r.json())
 .then(res=>{
-if(res.error){status.innerHTML="❌ "+res.error;return;}
-if(res.duplicate){status.innerHTML="⚠️ Duplicate";return;}
+
+if(res.error === "Already Saved"){
+status.innerHTML="❌ Already Saved";
+status.style.color="red";
+return;
+}
+
+if(res.duplicate){
+status.innerHTML="⚠️ Duplicate";
+status.style.color="orange";
+return;
+}
+
 status.innerHTML="✅ Saved";
+status.style.color="green";
+
 loadDashboard();
+
 });
 }
 
@@ -252,7 +281,10 @@ return_total.innerText=d.totalReturn||0;
 function lookup(){
 
 let order=lookupOrder.value.trim();
-if(!order)return alert("Enter Order");
+if(!order){
+alert("Enter Order");
+return;
+}
 
 lookupResult.innerHTML="Loading...";
 
@@ -269,11 +301,12 @@ let qty=Number(i.qty)||0;
 total+=qty;
 
 html+=`
-<b>${i.sku}</b> - ${i.product}<br>
+<b>${i.sku}</b><br>
+${i.product}<br>
 Qty: ${qty}<hr>`;
 });
 
-lookupResult.innerHTML=html+`<b>Total: ${total}</b>`;
+lookupResult.innerHTML=html + `<b>Total Qty: ${total}</b>`;
 });
 }
 
@@ -283,24 +316,37 @@ function trackOrder(){
 let o=trackOrderId.value.trim();
 let t=trackWaybill.value.trim();
 
+if(!o||!t){
+alert("Enter Order & Tracking");
+return;
+}
+
+trackResult.innerHTML="Loading...";
+
 fetch(API.track(o,t))
 .then(r=>r.json())
 .then(d=>{
 
+if(d.error){
+trackResult.innerHTML="❌ "+d.error;
+return;
+}
+
 trackingData=d;
 
-let amt=d.amount||0;
+let finalAmount=d.amount||0;
 if(d.payment==="Prepaid"){
-amt=amt-(amt*0.025*1.18);
+finalAmount=finalAmount-(finalAmount*0.025*1.18);
 }
 
 trackResult.innerHTML=`
 Status: ${d.status}<br>
 Customer: ${d.customer}<br>
-Amount: ₹${amt.toFixed(2)}
+Payment: ${d.payment}<br>
+Amount: ₹${finalAmount.toFixed(2)}
 `;
 
-settledAmount.value=amt.toFixed(2);
+settledAmount.value=finalAmount.toFixed(2);
 settledDate.value=new Date().toISOString().split('T')[0];
 
 extraBox.style.display="block";
@@ -311,15 +357,44 @@ saveBtn.style.display="block";
 
 // ===== SAVE =====
 function saveTracking(){
+
+if(!trackingData){
+alert("No data");
+return;
+}
+
 fetch(API.post,{
 method:"POST",
-body:JSON.stringify({type:"saveTracking",...trackingData})
+body:JSON.stringify({
+type:"saveTracking",
+...trackingData,
+settled_amount:settledAmount.value,
+settled_date:settledDate.value
 })
-.then(()=>alert("Saved ✅"));
+})
+.then(r=>r.json())
+.then(res=>{
+if(res.duplicate){
+alert("Already saved");
+return;
+}
+alert("Saved ✅");
+});
 }
 
 // ===== REFRESH =====
-function refreshPage(){location.reload();}
+function refreshPage(){
+location.reload();
+}
+
+// ===== ENTER SUPPORT =====
+manualOrder.addEventListener("keypress",e=>{
+if(e.key==="Enter") manualTracking.focus();
+});
+
+manualTracking.addEventListener("keypress",e=>{
+if(e.key==="Enter") submitManual();
+});
 
 // AUTO LOAD
 loadDashboard();
