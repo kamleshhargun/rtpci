@@ -33,6 +33,7 @@ button {
 .start{background:#28a745;color:#fff;}
 .stop{background:#dc3545;color:#fff;}
 .manual{background:#444;color:#fff;}
+.search{background:#6f42c1;color:#fff;}
 
 .mode-btn{padding:12px;margin:5px;background:#eee;}
 .mode-btn.active{background:#007bff;color:#fff;}
@@ -60,14 +61,83 @@ input{
 }
 
 #manualBox{display:none;}
+#saveBtn{display:none;}
 </style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>📦 Daily Scan</h2>
+
+<button onclick="refreshPage()" style="position:fixed;top:10px;right:10px;background:#007bff;color:#fff;border:none;padding:8px;border-radius:6px;">
+🔄 Refresh
+</button>
+
+<!-- DASHBOARD -->
+<div class="card">
+<h3>📊 Dashboard</h3>
+
+<div class="stat">
+<div>Today Pickup <span id="pickup_today">0</span></div>
+<div>Today Return <span id="return_today">0</span></div>
+</div>
+
+<div class="stat">
+<div>Yesterday Pickup <span id="pickup_yesterday">0</span></div>
+<div>Yesterday Return <span id="return_yesterday">0</span></div>
+</div>
+
+<div class="stat">
+<div>Total Pickup <span id="pickup_total">0</span></div>
+<div>Total Return <span id="return_total">0</span></div>
+</div>
+</div>
+
+<!-- MODE -->
+<div class="card">
+<button id="pickupBtn" class="mode-btn active" onclick="setMode('Pickup')">Pickup</button>
+<button id="returnBtn" class="mode-btn" onclick="setMode('Return')">Return</button>
+</div>
+
+<!-- CAMERA -->
+<div class="card">
+<div id="reader"></div>
+
+<button class="start" onclick="startOrder()">Start</button>
+<button class="stop" onclick="stopScan()">Stop</button>
+<button class="manual" onclick="openManual()">Manual</button>
+
+<div id="status">Ready...</div>
+</div>
+
+<!-- MANUAL -->
+<div class="card" id="manualBox">
+<input id="manualOrder" placeholder="Order ID">
+<input id="manualTracking" placeholder="Tracking ID">
+<button onclick="submitManual()">Submit</button>
+</div>
+
+<!-- TRACKING -->
+<div class="card">
+<h3>🔍 Track Order</h3>
+<input id="trackOrderId" placeholder="Order ID">
+<input id="trackWaybill" placeholder="Tracking ID">
+<button class="search" onclick="trackOrder()">Track</button>
+
+<div id="trackResult"></div>
+<button id="saveBtn" onclick="saveTracking()">Save</button>
+</div>
 
 </div>
+
 <script src="config.js"></script>
+
 <script>
 
 let html5QrCode, orderId="", mode="Pickup", trackingData=null;
-let step = "order"; // 🔥 step control
+let step = "order";
 
 const beep=new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
 
@@ -81,46 +151,38 @@ else returnBtn.classList.add("active");
 resetFlow();
 }
 
-// 🔥 START BUTTON CONTROL
+// START FLOW
 function startOrder(){
 
-// STEP 1 → ORDER SCAN
 if(step === "order"){
 
 html5QrCode=new Html5Qrcode("reader");
 
-html5QrCode.start({facingMode:"environment"},{fps:25,qrbox:250},
+html5QrCode.start({facingMode:"environment"},{fps:20,qrbox:250},
 text=>{
 orderId=text;
 stopScan();
 
 status.innerText="Order Scanned ✅";
-
-// 🔥 CHANGE BUTTON
 document.querySelector(".start").innerText="Next";
 
 step = "tracking";
 });
 
 }
-
-// STEP 2 → TRACKING SCAN
 else if(step === "tracking"){
 
 html5QrCode=new Html5Qrcode("reader");
 
-html5QrCode.start({facingMode:"environment"},{fps:25,qrbox:250},
+html5QrCode.start({facingMode:"environment"},{fps:20,qrbox:250},
 text=>{
 stopScan();
-
 beep.play();
 
-// 🔥 SEND DATA
 sendData(orderId,text);
 
 status.innerText="Done ✅";
 
-// 🔥 RESET FLOW AFTER SHORT DELAY
 setTimeout(resetFlow,800);
 });
 
@@ -141,6 +203,7 @@ setTimeout(()=>manualOrder.focus(),100);
 function submitManual(){
 let o=manualOrder.value.trim();
 let t=manualTracking.value.trim();
+
 if(!o||!t){alert("Fill both");return;}
 
 beep.play();
@@ -148,7 +211,7 @@ sendData(o,t);
 resetFlow();
 }
 
-// 🔥 RESET
+// RESET
 function resetFlow(){
 orderId="";
 manualOrder.value="";
@@ -156,8 +219,8 @@ manualTracking.value="";
 manualBox.style.display="none";
 
 status.innerText="Ready...";
+status.style.color="black";
 
-// 🔥 RESET BUTTON + STEP
 document.querySelector(".start").innerText="Start";
 step = "order";
 }
@@ -177,22 +240,21 @@ tracking:t
 .then(res=>{
 
 if(res.error === "Already Saved"){
-  status.innerHTML = "❌ Already Saved";
-  status.style.color = "red";
-  beep.play();
-  return;
+status.innerHTML="❌ Already Saved";
+status.style.color="red";
+beep.play();
+return;
 }
 
 if(res.duplicate){
-  status.innerHTML = "⚠️ Duplicate Tracking";
-  status.style.color = "orange";
-  beep.play();
-  return;
+status.innerHTML="⚠️ Duplicate Tracking";
+status.style.color="orange";
+beep.play();
+return;
 }
 
-// ✅ SUCCESS
-status.innerHTML = "✅ Saved";
-status.style.color = "green";
+status.innerHTML="✅ Saved";
+status.style.color="green";
 beep.play();
 
 loadDashboard();
@@ -216,6 +278,7 @@ return_total.innerText=d.totalReturn||0;
 
 // TRACK
 function trackOrder(){
+
 let o=trackOrderId.value.trim();
 let t=trackWaybill.value.trim();
 
@@ -230,7 +293,6 @@ return;
 
 trackingData=d;
 
-// PREPAID CALC
 let finalAmount = d.amount;
 if(d.payment==="Prepaid"){
 finalAmount = d.amount - (d.amount*0.025*1.18);
@@ -244,6 +306,7 @@ Amount: ₹${finalAmount.toFixed(2)}
 `;
 
 saveBtn.style.display="block";
+
 });
 }
 
@@ -268,35 +331,14 @@ if(e.key==="Enter") manualTracking.focus();
 manualTracking.addEventListener("keypress",e=>{
 if(e.key==="Enter") submitManual();
 });
+
+// REFRESH
 function refreshPage(){
-  // HTML REFRESH
-  // ✅ Return Request Page
-  if (typeof loadData === "function") {
-    loadData();
-    console.log("Return data refreshed");
-  }
-
-  // ✅ Scanner Dashboard
-  if (typeof loadDashboard === "function") {
-    loadDashboard();
-    console.log("Dashboard refreshed");
-  }
-
-  // ✅ Tracking Page
-  if (typeof trackOrder === "function" && trackingData) {
-    trackOrder();
-    console.log("Tracking refreshed");
-  }
-
-  // ✅ Extra safety (agar kuch bhi na mile)
-  if (
-    typeof loadData !== "function" &&
-    typeof loadDashboard !== "function"
-  ){
-    console.log("Fallback reload");
-    location.reload(); // last option
-  }
+loadDashboard();
+location.reload();
 }
+
 </script>
-</head>
+
+</body>
 </html>
