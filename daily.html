@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+body {
+  font-family: 'Segoe UI', Arial;
+  background: linear-gradient(135deg, #eef2f7, #dfe9f3);
+  text-align: center;
+  margin: 0;
+}
+.container { max-width: 420px; margin: auto; padding: 15px; }
+.card {
+  background:#fff;padding:18px;border-radius:16px;margin-bottom:15px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.08);
+}
+button {
+  padding:11px;margin:6px;border:none;border-radius:10px;
+  font-weight:600;cursor:pointer;
+}
+.start{background:#28a745;color:#fff;}
+.next{background:#007bff;color:#fff;}
+.stop{background:#dc3545;color:#fff;}
+.manual{background:#444;color:#fff;}
+.search{background:#6f42c1;color:#fff;}
+.mode-btn{padding:12px;margin:5px;background:#eee;}
+.mode-btn.active{background:#007bff;color:#fff;}
+input{padding:11px;width:92%;margin:6px 0;border-radius:8px;border:1px solid #ccc;}
+.stat{display:flex;justify-content:space-between;}
+.stat div{flex:1;background:#f8f9fa;margin:3px;padding:8px;border-radius:8px;}
+.stat span{font-size:18px;font-weight:bold;color:#007bff;}
+#manualBox{display:none;}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h2>📦 Daily Scan</h2>
+<button onclick="refreshPage()" style="
+position:fixed;
+top:10px;
+right:10px;
+padding:8px 12px;
+background:#007bff;
+color:#fff;
+border:none;
+border-radius:6px;
+cursor:pointer;
+z-index:999;
+">
+🔄 Refresh
+</button>
+<!-- DASHBOARD -->
+<div class="card">
+<h3>📊 Dashboard</h3>
+
+<div class="stat">
+<div>Today Pickup <span id="pickup_today">0</span></div>
+<div>Today Return <span id="return_today">0</span></div>
+</div>
+
+<div class="stat">
+<div>Yesterday Pickup <span id="pickup_yesterday">0</span></div>
+<div>Yesterday Return <span id="return_yesterday">0</span></div>
+</div>
+
+<div class="stat">
+<div>Total Pickup <span id="pickup_total">0</span></div>
+<div>Total Return <span id="return_total">0</span></div>
+</div>
+</div>
+
+<!-- MODE -->
+<div class="card">
+<button id="pickupBtn" class="mode-btn active" onclick="setMode('Pickup')">Pickup</button>
+<button id="returnBtn" class="mode-btn" onclick="setMode('Return')">Return</button>
+</div>
+
+<!-- CAMERA -->
+<div class="card">
+<div id="reader"></div>
+<button class="start" onclick="startOrder()">Start</button>
+<button class="stop" onclick="stopScan()">Stop</button>
+<button class="manual" onclick="openManual()">Manual</button>
+<div id="status">Ready</div>
+</div>
+
+<!-- MANUAL -->
+<div class="card" id="manualBox">
+<input id="manualOrder" placeholder="Order ID">
+<input id="manualTracking" placeholder="Tracking ID">
+<button onclick="submitManual()">Submit</button>
+</div>
+
+</div>
+<script src="config.js"></script>
+<script>
+
+let html5QrCode, orderId="", mode="Pickup", trackingData=null;
+let step = "order"; // 🔥 step control
+
+const beep=new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
+
+// MODE
+function setMode(m){
+mode=m;
+pickupBtn.classList.remove("active");
+returnBtn.classList.remove("active");
+if(m==="Pickup") pickupBtn.classList.add("active");
+else returnBtn.classList.add("active");
+resetFlow();
+}
+
+// 🔥 START BUTTON CONTROL
+function startOrder(){
+
+// STEP 1 → ORDER SCAN
+if(step === "order"){
+
+html5QrCode=new Html5Qrcode("reader");
+
+html5QrCode.start({facingMode:"environment"},{fps:25,qrbox:250},
+text=>{
+orderId=text;
+stopScan();
+
+status.innerText="Order Scanned ✅";
+
+// 🔥 CHANGE BUTTON
+document.querySelector(".start").innerText="Next";
+
+step = "tracking";
+});
+
+}
+
+// STEP 2 → TRACKING SCAN
+else if(step === "tracking"){
+
+html5QrCode=new Html5Qrcode("reader");
+
+html5QrCode.start({facingMode:"environment"},{fps:25,qrbox:250},
+text=>{
+stopScan();
+
+beep.play();
+
+// 🔥 SEND DATA
+sendData(orderId,text);
+
+status.innerText="Done ✅";
+
+// 🔥 RESET FLOW AFTER SHORT DELAY
+setTimeout(resetFlow,800);
+});
+
+}
+
+}
+
+function stopScan(){
+if(html5QrCode) html5QrCode.stop().catch(()=>{});
+}
+
+// MANUAL
+function openManual(){
+manualBox.style.display="block";
+setTimeout(()=>manualOrder.focus(),100);
+}
+
+function submitManual(){
+let o=manualOrder.value.trim();
+let t=manualTracking.value.trim();
+if(!o||!t){alert("Fill both");return;}
+
+beep.play();
+sendData(o,t);
+resetFlow();
+}
+
+// 🔥 RESET
+function resetFlow(){
+orderId="";
+manualOrder.value="";
+manualTracking.value="";
+manualBox.style.display="none";
+
+status.innerText="Ready...";
+
+// 🔥 RESET BUTTON + STEP
+document.querySelector(".start").innerText="Start";
+step = "order";
+}
+
+// SEND
+function sendData(o,t){
+
+fetch(API.post,{
+method:"POST",
+body:JSON.stringify({
+mode:mode.toLowerCase(),
+order_id:o,
+tracking:t
+})
+})
+.then(r=>r.json())
+.then(res=>{
+
+if(res.error === "Already Saved"){
+  status.innerHTML = "❌ Already Saved";
+  status.style.color = "red";
+  beep.play();
+  return;
+}
+
+if(res.duplicate){
+  status.innerHTML = "⚠️ Duplicate Tracking";
+  status.style.color = "orange";
+  beep.play();
+  return;
+}
+
+// ✅ SUCCESS
+status.innerHTML = "✅ Saved";
+status.style.color = "green";
+beep.play();
+
+loadDashboard();
+
+});
+}
+
+// DASHBOARD
+function loadDashboard(){
+fetch(API.stats)
+.then(r=>r.json())
+.then(d=>{
+pickup_today.innerText=d.todayPickup||0;
+return_today.innerText=d.todayReturn||0;
+pickup_yesterday.innerText=d.yesterdayPickup||0;
+return_yesterday.innerText=d.yesterdayReturn||0;
+pickup_total.innerText=d.totalPickup||0;
+return_total.innerText=d.totalReturn||0;
+});
+}
+
+// TRACK
+function trackOrder(){
+let o=trackOrderId.value.trim();
+let t=trackWaybill.value.trim();
+
+fetch(API.track(o,t))
+.then(r=>r.json())
+.then(d=>{
+
+if(d.error){
+trackResult.innerHTML="❌ "+d.error;
+return;
+}
+
+trackingData=d;
+
+// PREPAID CALC
+let finalAmount = d.amount;
+if(d.payment==="Prepaid"){
+finalAmount = d.amount - (d.amount*0.025*1.18);
+}
+
+trackResult.innerHTML=`
+Status: ${d.status}<br>
+Customer: ${d.customer}<br>
+Payment: ${d.payment}<br>
+Amount: ₹${finalAmount.toFixed(2)}
+`;
+
+saveBtn.style.display="block";
+});
+}
+
+// SAVE
+function saveTracking(){
+fetch(API.post,{
+method:"POST",
+body:JSON.stringify({type:"saveTracking",...trackingData})
+})
+.then(()=>alert("Saved ✅"));
+}
+
+// AUTO REFRESH
+setInterval(loadDashboard,3000);
+loadDashboard();
+
+// ENTER FLOW
+manualOrder.addEventListener("keypress",e=>{
+if(e.key==="Enter") manualTracking.focus();
+});
+
+manualTracking.addEventListener("keypress",e=>{
+if(e.key==="Enter") submitManual();
+});
+function refreshPage(){
+  // HTML REFRESH
+  // ✅ Return Request Page
+  if (typeof loadData === "function") {
+    loadData();
+    console.log("Return data refreshed");
+  }
+
+  // ✅ Scanner Dashboard
+  if (typeof loadDashboard === "function") {
+    loadDashboard();
+    console.log("Dashboard refreshed");
+  }
+
+  // ✅ Tracking Page
+  if (typeof trackOrder === "function" && trackingData) {
+    trackOrder();
+    console.log("Tracking refreshed");
+  }
+
+  // ✅ Extra safety (agar kuch bhi na mile)
+  if (
+    typeof loadData !== "function" &&
+    typeof loadDashboard !== "function"
+  ){
+    console.log("Fallback reload");
+    location.reload(); // last option
+  }
+}
+</script>
+
+</body>
+</html>
