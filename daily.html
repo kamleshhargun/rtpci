@@ -8,26 +8,32 @@
 body {
   font-family: 'Segoe UI', Arial;
   background: linear-gradient(135deg, #eef2f7, #dfe9f3);
-  text-align: center;
   margin: 0;
+  text-align: center;
 }
-.container { max-width: 420px; margin: auto; padding: 15px; }
+
+.container {
+  max-width: 420px;
+  margin: auto;
+  padding: 15px;
+}
 
 .card {
   background:#fff;
-  padding:18px;
-  border-radius:16px;
-  margin-bottom:15px;
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:12px;
   box-shadow:0 6px 18px rgba(0,0,0,0.08);
 }
 
 button {
-  padding:11px;
-  margin:6px;
+  width:100%;
+  padding:10px;
+  margin-top:8px;
   border:none;
   border-radius:10px;
-  font-weight:600;
   cursor:pointer;
+  font-weight:600;
 }
 
 .start{background:#28a745;color:#fff;}
@@ -35,33 +41,22 @@ button {
 .manual{background:#444;color:#fff;}
 .search{background:#6f42c1;color:#fff;}
 
-.mode-btn{padding:12px;margin:5px;background:#eee;}
+.mode-btn{background:#eee;}
 .mode-btn.active{background:#007bff;color:#fff;}
 
 input{
-  padding:11px;
-  width:92%;
-  margin:6px 0;
+  width:100%;
+  padding:10px;
+  margin-top:5px;
   border-radius:8px;
   border:1px solid #ccc;
 }
 
 .stat{display:flex;justify-content:space-between;}
-.stat div{
-  flex:1;
-  background:#f8f9fa;
-  margin:3px;
-  padding:8px;
-  border-radius:8px;
-}
-.stat span{
-  font-size:18px;
-  font-weight:bold;
-  color:#007bff;
-}
+.stat div{flex:1;background:#f8f9fa;margin:3px;padding:8px;border-radius:8px;}
+.stat span{font-weight:bold;color:#007bff;}
 
-#manualBox{display:none;}
-#saveBtn{display:none;}
+#manualBox,#extraBox,#saveBtn{display:none;}
 </style>
 </head>
 
@@ -69,39 +64,37 @@ input{
 
 <div class="container">
 
-<h2>📦 Daily Scan</h2>
+<h2>📦 ERP Daily System</h2>
 
-<button onclick="refreshPage()" style="position:fixed;top:10px;right:10px;background:#007bff;color:#fff;border:none;padding:8px;border-radius:6px;">
-🔄 Refresh
-</button>
+<button onclick="refreshPage()">🔄 Refresh</button>
 
-<!-- DASHBOARD -->
+<!-- ================= DASHBOARD ================= -->
 <div class="card">
 <h3>📊 Dashboard</h3>
 
 <div class="stat">
-<div>Today Pickup <span id="pickup_today">0</span></div>
-<div>Today Return <span id="return_today">0</span></div>
+<div>Pickup <span id="pickup_today">0</span></div>
+<div>Return <span id="return_today">0</span></div>
 </div>
 
 <div class="stat">
-<div>Yesterday Pickup <span id="pickup_yesterday">0</span></div>
-<div>Yesterday Return <span id="return_yesterday">0</span></div>
+<div>Y Pickup <span id="pickup_yesterday">0</span></div>
+<div>Y Return <span id="return_yesterday">0</span></div>
 </div>
 
 <div class="stat">
-<div>Total Pickup <span id="pickup_total">0</span></div>
-<div>Total Return <span id="return_total">0</span></div>
+<div>Total P <span id="pickup_total">0</span></div>
+<div>Total R <span id="return_total">0</span></div>
 </div>
 </div>
 
-<!-- MODE -->
+<!-- ================= MODE ================= -->
 <div class="card">
 <button id="pickupBtn" class="mode-btn active" onclick="setMode('Pickup')">Pickup</button>
 <button id="returnBtn" class="mode-btn" onclick="setMode('Return')">Return</button>
 </div>
 
-<!-- CAMERA -->
+<!-- ================= SCANNER ================= -->
 <div class="card">
 <div id="reader"></div>
 
@@ -119,15 +112,34 @@ input{
 <button onclick="submitManual()">Submit</button>
 </div>
 
-<!-- TRACKING -->
+<!-- ================= LOOKUP ================= -->
 <div class="card">
-<h3>🔍 Track Order</h3>
+<h3>🔍 Lookup</h3>
+<input id="lookupOrder" placeholder="Order ID">
+<button class="search" onclick="lookup()">Search</button>
+<div id="lookupResult">Enter Order</div>
+</div>
+
+<!-- ================= TRACKING ================= -->
+<div class="card">
+<h3>📦 Tracking</h3>
+
 <input id="trackOrderId" placeholder="Order ID">
-<input id="trackWaybill" placeholder="Tracking ID">
+<input id="trackWaybill" placeholder="Tracking">
+
 <button class="search" onclick="trackOrder()">Track</button>
 
 <div id="trackResult"></div>
-<button id="saveBtn" onclick="saveTracking()">Save</button>
+
+<div id="extraBox">
+<label>Settled Amount</label>
+<input id="settledAmount" readonly>
+
+<label>Date</label>
+<input type="date" id="settledDate">
+</div>
+
+<button id="saveBtn" class="start" onclick="saveTracking()">Save</button>
 </div>
 
 </div>
@@ -137,40 +149,35 @@ input{
 <script>
 
 let html5QrCode, orderId="", mode="Pickup", trackingData=null;
-let step = "order";
+let step="order";
 
 const beep=new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
 
-// MODE
+// ===== MODE =====
 function setMode(m){
 mode=m;
 pickupBtn.classList.remove("active");
 returnBtn.classList.remove("active");
-if(m==="Pickup") pickupBtn.classList.add("active");
-else returnBtn.classList.add("active");
+(m==="Pickup"?pickupBtn:returnBtn).classList.add("active");
 resetFlow();
 }
 
-// START FLOW
+// ===== SCAN FLOW =====
 function startOrder(){
 
-if(step === "order"){
-
+if(step==="order"){
 html5QrCode=new Html5Qrcode("reader");
 
 html5QrCode.start({facingMode:"environment"},{fps:20,qrbox:250},
 text=>{
 orderId=text;
 stopScan();
-
 status.innerText="Order Scanned ✅";
 document.querySelector(".start").innerText="Next";
-
-step = "tracking";
+step="tracking";
 });
 
-}
-else if(step === "tracking"){
+}else{
 
 html5QrCode=new Html5Qrcode("reader");
 
@@ -178,11 +185,8 @@ html5QrCode.start({facingMode:"environment"},{fps:20,qrbox:250},
 text=>{
 stopScan();
 beep.play();
-
 sendData(orderId,text);
-
 status.innerText="Done ✅";
-
 setTimeout(resetFlow,800);
 });
 
@@ -194,75 +198,43 @@ function stopScan(){
 if(html5QrCode) html5QrCode.stop().catch(()=>{});
 }
 
-// MANUAL
-function openManual(){
-manualBox.style.display="block";
-setTimeout(()=>manualOrder.focus(),100);
-}
-
+// ===== MANUAL =====
+function openManual(){manualBox.style.display="block";}
 function submitManual(){
 let o=manualOrder.value.trim();
 let t=manualTracking.value.trim();
-
-if(!o||!t){alert("Fill both");return;}
-
-beep.play();
+if(!o||!t)return alert("Fill both");
 sendData(o,t);
 resetFlow();
 }
 
-// RESET
+// ===== RESET =====
 function resetFlow(){
 orderId="";
 manualOrder.value="";
 manualTracking.value="";
 manualBox.style.display="none";
-
 status.innerText="Ready...";
-status.style.color="black";
-
 document.querySelector(".start").innerText="Start";
-step = "order";
+step="order";
 }
 
-// SEND
+// ===== SEND =====
 function sendData(o,t){
-
 fetch(API.post,{
 method:"POST",
-body:JSON.stringify({
-mode:mode.toLowerCase(),
-order_id:o,
-tracking:t
-})
+body:JSON.stringify({mode:mode.toLowerCase(),order_id:o,tracking:t})
 })
 .then(r=>r.json())
 .then(res=>{
-
-if(res.error === "Already Saved"){
-status.innerHTML="❌ Already Saved";
-status.style.color="red";
-beep.play();
-return;
-}
-
-if(res.duplicate){
-status.innerHTML="⚠️ Duplicate Tracking";
-status.style.color="orange";
-beep.play();
-return;
-}
-
+if(res.error){status.innerHTML="❌ "+res.error;return;}
+if(res.duplicate){status.innerHTML="⚠️ Duplicate";return;}
 status.innerHTML="✅ Saved";
-status.style.color="green";
-beep.play();
-
 loadDashboard();
-
 });
 }
 
-// DASHBOARD
+// ===== DASHBOARD =====
 function loadDashboard(){
 fetch(API.stats)
 .then(r=>r.json())
@@ -276,7 +248,36 @@ return_total.innerText=d.totalReturn||0;
 });
 }
 
-// TRACK
+// ===== LOOKUP =====
+function lookup(){
+
+let order=lookupOrder.value.trim();
+if(!order)return alert("Enter Order");
+
+lookupResult.innerHTML="Loading...";
+
+fetch(API.lookup(order))
+.then(r=>r.json())
+.then(data=>{
+
+if(!Array.isArray(data)) data=[];
+
+let html="", total=0;
+
+data.forEach(i=>{
+let qty=Number(i.qty)||0;
+total+=qty;
+
+html+=`
+<b>${i.sku}</b> - ${i.product}<br>
+Qty: ${qty}<hr>`;
+});
+
+lookupResult.innerHTML=html+`<b>Total: ${total}</b>`;
+});
+}
+
+// ===== TRACK =====
 function trackOrder(){
 
 let o=trackOrderId.value.trim();
@@ -286,31 +287,29 @@ fetch(API.track(o,t))
 .then(r=>r.json())
 .then(d=>{
 
-if(d.error){
-trackResult.innerHTML="❌ "+d.error;
-return;
-}
-
 trackingData=d;
 
-let finalAmount = d.amount;
+let amt=d.amount||0;
 if(d.payment==="Prepaid"){
-finalAmount = d.amount - (d.amount*0.025*1.18);
+amt=amt-(amt*0.025*1.18);
 }
 
 trackResult.innerHTML=`
 Status: ${d.status}<br>
 Customer: ${d.customer}<br>
-Payment: ${d.payment}<br>
-Amount: ₹${finalAmount.toFixed(2)}
+Amount: ₹${amt.toFixed(2)}
 `;
 
+settledAmount.value=amt.toFixed(2);
+settledDate.value=new Date().toISOString().split('T')[0];
+
+extraBox.style.display="block";
 saveBtn.style.display="block";
 
 });
 }
 
-// SAVE
+// ===== SAVE =====
 function saveTracking(){
 fetch(API.post,{
 method:"POST",
@@ -319,24 +318,12 @@ body:JSON.stringify({type:"saveTracking",...trackingData})
 .then(()=>alert("Saved ✅"));
 }
 
-// AUTO REFRESH
+// ===== REFRESH =====
+function refreshPage(){location.reload();}
+
+// AUTO LOAD
+loadDashboard();
 setInterval(loadDashboard,3000);
-loadDashboard();
-
-// ENTER FLOW
-manualOrder.addEventListener("keypress",e=>{
-if(e.key==="Enter") manualTracking.focus();
-});
-
-manualTracking.addEventListener("keypress",e=>{
-if(e.key==="Enter") submitManual();
-});
-
-// REFRESH
-function refreshPage(){
-loadDashboard();
-location.reload();
-}
 
 </script>
 
