@@ -207,6 +207,16 @@ iframe{
 </div>
 
 <div class="card">
+  <h3>📦 Yesterday Pickup</h3>
+  <div class="big" id="pickup_yesterday">0</div>
+</div>
+
+<div class="card">
+  <h3>🔁 Yesterday Return</h3>
+  <div class="big" id="return_yesterday">0</div>
+</div>
+
+<div class="card">
   <h3>📊 Total Pickup</h3>
   <div class="big" id="pickup_total">0</div>
 </div>
@@ -272,7 +282,11 @@ async function loadDashboard(){
 
     document.getElementById("pickup_today").innerText = d.todayPickup || 0;
     document.getElementById("return_today").innerText = d.todayReturn || 0;
-    document.getElementById("pickup_total").innerText = d.totalPickup || 0;
+
+document.getElementById("pickup_yesterday").innerText = d.yesterdayPickup || 0;
+    
+document.getElementById("return_yesterday").innerText = d.yesterdayPickup || 0;
+     document.getElementById("pickup_total").innerText = d.totalPickup || 0;
     document.getElementById("return_total").innerText = d.totalReturn || 0;
 
   }catch(err){
