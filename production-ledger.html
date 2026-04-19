@@ -69,13 +69,14 @@ button{padding:6px 10px;border:none;border-radius:5px;color:#fff;cursor:pointer;
 
 // ===== SAFE TEXT (QUOTE FIX) =====
 function safeText(text){
-  return text.replace(/'/g, "\\'");
+  return String(text).replace(/'/g, "\\'");
 }
 
 // ===== LOAD =====
 async function load(category, container){
   try{
-    let res = await fetch(API + "?type=ledger&category=" + category);
+
+    let res = await fetch(API.ledgerGet(category));
     let data = await res.json();
 
     let box = document.getElementById(container);
@@ -95,6 +96,7 @@ async function load(category, container){
 
   }catch(err){
     alert("Load Error: " + err);
+    console.error(err);
   }
 }
 
@@ -104,24 +106,31 @@ async function add(category,inputId){
   let val = document.getElementById(inputId).value.trim();
   if(!val) return alert("Enter value");
 
-  let res = await fetch(API,{
-    method:"POST",
-    body:JSON.stringify({
-      type:"ledger",
-      action:"add",
-      category:category,
-      name:val
-    })
-  });
+  try{
+    let res = await fetch(API.ledgerPost,{
+      method:"POST",
+      body:JSON.stringify({
+        type:"ledger",
+        action:"add",
+        category:category,
+        name:val
+      })
+    });
 
-  let data = await res.json();
+    let data = await res.json();
 
-  if(data.error){
-    alert(data.error);
+    if(data.error){
+      alert(data.error);
+      return;
+    }
+
+    document.getElementById(inputId).value="";
+    refresh();
+
+  }catch(err){
+    alert("Add Error");
+    console.error(err);
   }
-
-  document.getElementById(inputId).value="";
-  refresh();
 }
 
 // ===== DELETE =====
@@ -129,17 +138,23 @@ async function del(category,id){
 
   if(!confirm("Delete this item?")) return;
 
-  await fetch(API,{
-    method:"POST",
-    body:JSON.stringify({
-      type:"ledger",
-      action:"delete",
-      category:category,
-      id:id
-    })
-  });
+  try{
+    await fetch(API.ledgerPost,{
+      method:"POST",
+      body:JSON.stringify({
+        type:"ledger",
+        action:"delete",
+        category:category,
+        id:id
+      })
+    });
 
-  refresh();
+    refresh();
+
+  }catch(err){
+    alert("Delete Error");
+    console.error(err);
+  }
 }
 
 // ===== EDIT =====
@@ -148,18 +163,24 @@ async function edit(category,id,oldVal){
   let newVal = prompt("Edit value", oldVal);
   if(!newVal || newVal===oldVal) return;
 
-  await fetch(API,{
-    method:"POST",
-    body:JSON.stringify({
-      type:"ledger",
-      action:"edit",
-      category:category,
-      id:id,
-      name:newVal
-    })
-  });
+  try{
+    await fetch(API.ledgerPost,{
+      method:"POST",
+      body:JSON.stringify({
+        type:"ledger",
+        action:"edit",
+        category:category,
+        id:id,
+        name:newVal
+      })
+    });
 
-  refresh();
+    refresh();
+
+  }catch(err){
+    alert("Edit Error");
+    console.error(err);
+  }
 }
 
 // ===== REFRESH =====
@@ -170,7 +191,7 @@ function refresh(){
   load("labour","labourList");
 }
 
-// INIT
+// ===== INIT =====
 refresh();
 
 </script>
