@@ -2,10 +2,11 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Production ERP</title>
+<title>Production</title>
 
 <style>
 body{font-family:Arial;margin:0;background:#f4f6f9;}
+
 .menu{display:flex;background:#111;}
 .menu a{flex:1;padding:12px;color:#fff;text-align:center;cursor:pointer;}
 .menu a.active{background:#007bff;}
@@ -18,19 +19,19 @@ body{font-family:Arial;margin:0;background:#f4f6f9;}
 
 input,select{padding:8px;margin:5px;}
 button{padding:8px 12px;border:none;color:#fff;border-radius:5px;cursor:pointer;}
+
 .add{background:green;}
 .save{background:black;}
 .delete{background:red;}
-.edit{background:orange;}
 
 table{width:100%;border-collapse:collapse;background:#fff;}
 th,td{border:1px solid #ddd;padding:10px;text-align:center;}
-.drawer{display:none;background:#fafafa;}
 </style>
 </head>
 
 <body>
 
+<!-- ================= MENU ================= -->
 <div class="menu">
 <a class="active" onclick="openTab('fabric',this)">Fabric</a>
 <a onclick="openTab('cutting',this)">Cutting</a>
@@ -45,17 +46,20 @@ th,td{border:1px solid #ddd;padding:10px;text-align:center;}
 <div class="box">
 <h3>Fabric Purchase</h3>
 
-<select id="party"></select>
-<select id="fabricSelect"></select>
+<input list="partyList" id="party">
+<datalist id="partyList"></datalist>
+
+<input list="fabricList" id="fabricInput">
+<datalist id="fabricList"></datalist>
+
 <input id="meter" placeholder="Meter">
+
 <button class="save" onclick="saveFabric()">Save</button>
 
 </div>
 
 <table>
-<thead><tr>
-<th>Party</th><th>Fabric</th><th>Meter</th><th>Action</th>
-</tr></thead>
+<thead><tr><th>Party</th><th>Fabric</th><th>Meter</th><th>Action</th></tr></thead>
 <tbody id="fabricTable"></tbody>
 </table>
 
@@ -70,17 +74,18 @@ th,td{border:1px solid #ddd;padding:10px;text-align:center;}
 <h3>Cutting</h3>
 
 <select id="cutFabric"></select>
-<input id="cutSku" list="skuList">
+
+<input list="skuList" id="cutSku">
 <datalist id="skuList"></datalist>
+
 <input id="cutQty" placeholder="Qty">
+
 <button class="save" onclick="saveCutting()">Save</button>
 
 </div>
 
 <table>
-<thead><tr>
-<th>Fabric</th><th>SKU</th><th>Qty</th>
-</tr></thead>
+<thead><tr><th>Fabric</th><th>SKU</th><th>Qty</th></tr></thead>
 <tbody id="cutTable"></tbody>
 </table>
 
@@ -95,17 +100,18 @@ th,td{border:1px solid #ddd;padding:10px;text-align:center;}
 <h3>Stitching</h3>
 
 <select id="labour"></select>
-<input id="stitchSku" list="skuList2">
+
+<input list="skuList2" id="stitchSku">
 <datalist id="skuList2"></datalist>
+
 <input id="stitchQty" placeholder="Qty">
+
 <button class="save" onclick="saveStitching()">Save</button>
 
 </div>
 
 <table>
-<thead><tr>
-<th>Labour</th><th>SKU</th><th>Qty</th>
-</tr></thead>
+<thead><tr><th>Labour</th><th>SKU</th><th>Qty</th></tr></thead>
 <tbody id="stitchTable"></tbody>
 </table>
 
@@ -120,16 +126,18 @@ th,td{border:1px solid #ddd;padding:10px;text-align:center;}
 <h3>Finished Goods</h3>
 
 <select id="labour2"></select>
-<input id="finishSku">
+
+<input list="skuList3" id="finishSku">
+<datalist id="skuList3"></datalist>
+
 <input id="finishQty" placeholder="Qty">
+
 <button class="save" onclick="saveFinished()">Save</button>
 
 </div>
 
 <table>
-<thead><tr>
-<th>Labour</th><th>SKU</th><th>Qty</th>
-</tr></thead>
+<thead><tr><th>Labour</th><th>SKU</th><th>Qty</th></tr></thead>
 <tbody id="finishTable"></tbody>
 </table>
 
@@ -137,6 +145,7 @@ th,td{border:1px solid #ddd;padding:10px;text-align:center;}
 </div>
 
 <script>
+
 
 // ================= TAB =================
 function openTab(id,el){
@@ -147,23 +156,35 @@ document.querySelectorAll(".menu a").forEach(a=>a.classList.remove("active"));
 el.classList.add("active");
 }
 
-// ================= LEDGER =================
+
+// ================= LEDGER LOAD =================
+let parties=[], fabrics=[], skus=[], labours=[];
+
 function loadLedger(){
-let parties=JSON.parse(localStorage.getItem("parties"))||[];
-let fabrics=JSON.parse(localStorage.getItem("fabrics"))||[];
-let skus=JSON.parse(localStorage.getItem("skus"))||[];
-let labours=JSON.parse(localStorage.getItem("labours"))||[];
+parties = JSON.parse(localStorage.getItem("parties"))||[];
+fabrics = JSON.parse(localStorage.getItem("fabrics"))||[];
+skus = JSON.parse(localStorage.getItem("skus"))||[];
+labours = JSON.parse(localStorage.getItem("labours"))||[];
 
-party.innerHTML=parties.map(p=>`<option>${p}</option>`).join("");
-fabricSelect.innerHTML=fabrics.map(f=>`<option>${f}</option>`).join("");
-cutFabric.innerHTML=fabrics.map(f=>`<option>${f}</option>`).join("");
+partyList.innerHTML = parties.map(p=>`<option value="${p}">`).join("");
+fabricList.innerHTML = fabrics.map(f=>`<option value="${f}">`).join("");
 
-skuList.innerHTML=skus.map(s=>`<option value="${s}">`).join("");
-skuList2.innerHTML=skus.map(s=>`<option value="${s}">`).join("");
+skuList.innerHTML = skus.map(s=>`<option value="${s}">`).join("");
+skuList2.innerHTML = skus.map(s=>`<option value="${s}">`).join("");
+skuList3.innerHTML = skus.map(s=>`<option value="${s}">`).join("");
 
-labour.innerHTML=labours.map(l=>`<option>${l}</option>`).join("");
-labour2.innerHTML=labours.map(l=>`<option>${l}</option>`).join("");
+cutFabric.innerHTML = fabrics.map(f=>`<option>${f}</option>`).join("");
+
+labour.innerHTML = labours.map(l=>`<option>${l}</option>`).join("");
+labour2.innerHTML = labours.map(l=>`<option>${l}</option>`).join("");
 }
+
+
+// ================= VALIDATION =================
+function checkValid(val, list){
+return list.includes(val);
+}
+
 
 // ================= STORAGE =================
 let fabricData=JSON.parse(localStorage.getItem("fabricData"))||[];
@@ -171,15 +192,39 @@ let cuttingData=JSON.parse(localStorage.getItem("cuttingData"))||[];
 let stitchingData=JSON.parse(localStorage.getItem("stitchingData"))||[];
 let finishedData=JSON.parse(localStorage.getItem("finishedData"))||[];
 
+
+// ================= STOCK =================
+function getStock(){
+
+let stock = {};
+
+// Fabric add
+fabricData.forEach(f=>{
+if(!stock[f.fabric]) stock[f.fabric]=0;
+stock[f.fabric]+=f.meter;
+});
+
+// Cutting minus
+cuttingData.forEach(c=>{
+if(stock[c.fabric]) stock[c.fabric]-=c.qty;
+});
+
+return stock;
+}
+
+
 // ================= FABRIC =================
 function saveFabric(){
-let obj={
-party:party.value,
-fabric:fabricSelect.value,
-meter:Number(meter.value)
-};
 
-fabricData.push(obj);
+if(!checkValid(party.value, parties)) return alert("Invalid Party");
+if(!checkValid(fabricInput.value, fabrics)) return alert("Invalid Fabric");
+
+fabricData.push({
+party:party.value,
+fabric:fabricInput.value,
+meter:Number(meter.value)
+});
+
 localStorage.setItem("fabricData",JSON.stringify(fabricData));
 renderFabric();
 }
@@ -198,20 +243,31 @@ fabricTable.innerHTML+=`
 }
 
 function deleteFabric(i){
+if(confirm("Delete?")){
 fabricData.splice(i,1);
 localStorage.setItem("fabricData",JSON.stringify(fabricData));
 renderFabric();
 }
+}
+
 
 // ================= CUTTING =================
 function saveCutting(){
-let obj={
+
+if(!checkValid(cutSku.value, skus)) return alert("Invalid SKU");
+
+let stock = getStock();
+
+if((stock[cutFabric.value]||0) < cutQty.value){
+return alert("Not enough fabric stock");
+}
+
+cuttingData.push({
 fabric:cutFabric.value,
 sku:cutSku.value,
 qty:Number(cutQty.value)
-};
+});
 
-cuttingData.push(obj);
 localStorage.setItem("cuttingData",JSON.stringify(cuttingData));
 renderCut();
 }
@@ -228,15 +284,18 @@ cutTable.innerHTML+=`
 });
 }
 
+
 // ================= STITCHING =================
 function saveStitching(){
-let obj={
+
+if(!checkValid(stitchSku.value, skus)) return alert("Invalid SKU");
+
+stitchingData.push({
 labour:labour.value,
 sku:stitchSku.value,
 qty:Number(stitchQty.value)
-};
+});
 
-stitchingData.push(obj);
 localStorage.setItem("stitchingData",JSON.stringify(stitchingData));
 renderStitch();
 }
@@ -253,15 +312,18 @@ stitchTable.innerHTML+=`
 });
 }
 
+
 // ================= FINISHED =================
 function saveFinished(){
-let obj={
+
+if(!checkValid(finishSku.value, skus)) return alert("Invalid SKU");
+
+finishedData.push({
 labour:labour2.value,
 sku:finishSku.value,
 qty:Number(finishQty.value)
-};
+});
 
-finishedData.push(obj);
 localStorage.setItem("finishedData",JSON.stringify(finishedData));
 renderFinish();
 }
@@ -277,6 +339,7 @@ finishTable.innerHTML+=`
 </tr>`;
 });
 }
+
 
 // ================= INIT =================
 loadLedger();
