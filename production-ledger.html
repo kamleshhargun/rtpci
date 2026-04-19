@@ -37,114 +37,122 @@ button{padding:6px 10px;border:none;border-radius:5px;color:#fff;cursor:pointer;
 <div class="box">
 <h3>Party</h3>
 <input id="partyInput">
-<button class="add" onclick="add('Sheet6','partyInput')">Add</button>
+<button class="add" onclick="add('party','partyInput')">Add</button>
 <div id="partyList" class="list"></div>
 </div>
 
 <div class="box">
 <h3>Fabric</h3>
 <input id="fabricInput">
-<button class="add" onclick="add('Sheet7','fabricInput')">Add</button>
+<button class="add" onclick="add('fabric','fabricInput')">Add</button>
 <div id="fabricList" class="list"></div>
 </div>
 
 <div class="box">
 <h3>SKU</h3>
 <input id="skuInput">
-<button class="add" onclick="add('Sheet8','skuInput')">Add</button>
+<button class="add" onclick="add('sku','skuInput')">Add</button>
 <div id="skuList" class="list"></div>
 </div>
 
 <div class="box">
 <h3>Labour</h3>
 <input id="labourInput">
-<button class="add" onclick="add('Sheet9','labourInput')">Add</button>
+<button class="add" onclick="add('labour','labourInput')">Add</button>
 <div id="labourList" class="list"></div>
 </div>
 
 </div>
+
 <script src="config.js"></script>
 <script>
 
 // ===== LOAD =====
-async function load(sheet, container){
-  let res = await fetch(API + "?type=get&sheet=" + sheet);
-  let data = await res.json();
+async function load(category, container){
 
-  let box = document.getElementById(container);
-  box.innerHTML="";
+let res = await fetch(API + "?type=ledger&category=" + category);
+let data = await res.json();
 
-  data.forEach(d=>{
-    box.innerHTML += `
-      <div>
-        ${d}
-        <div>
-          <button class="edit" onclick="edit('${sheet}','${d}')">Edit</button>
-          <button class="delete" onclick="del('${sheet}','${d}')">X</button>
-        </div>
-      </div>
-    `;
-  });
+let box = document.getElementById(container);
+box.innerHTML="";
+
+data.forEach(d=>{
+box.innerHTML += `
+<div>
+  ${d.name}
+  <div>
+    <button class="edit" onclick="edit('${category}',${d.id},'${d.name}')">Edit</button>
+    <button class="delete" onclick="del('${category}',${d.id})">X</button>
+  </div>
+</div>
+`;
+});
 }
 
 // ===== ADD =====
-async function add(sheet,inputId){
-  let val = document.getElementById(inputId).value.trim();
-  if(!val) return alert("Enter value");
+async function add(category,inputId){
 
-  await fetch(API,{
-    method:"POST",
-    body:JSON.stringify({
-      action:"add",
-      sheet:sheet,
-      value:val
-    })
-  });
+let val = document.getElementById(inputId).value.trim();
+if(!val) return alert("Enter value");
 
-  document.getElementById(inputId).value="";
-  refresh();
+await fetch(API,{
+method:"POST",
+body:JSON.stringify({
+type:"ledger",
+action:"add",
+category:category,
+name:val
+})
+});
+
+document.getElementById(inputId).value="";
+refresh();
 }
 
 // ===== DELETE =====
-async function del(sheet,val){
-  if(!confirm("Delete this item?")) return;
+async function del(category,id){
 
-  await fetch(API,{
-    method:"POST",
-    body:JSON.stringify({
-      action:"delete",
-      sheet:sheet,
-      value:val
-    })
-  });
+if(!confirm("Delete this item?")) return;
 
-  refresh();
+await fetch(API,{
+method:"POST",
+body:JSON.stringify({
+type:"ledger",
+action:"delete",
+category:category,
+id:id
+})
+});
+
+refresh();
 }
 
 // ===== EDIT =====
-async function edit(sheet,oldVal){
-  let newVal = prompt("Edit value", oldVal);
-  if(!newVal || newVal === oldVal) return;
+async function edit(category,id,oldVal){
 
-  await fetch(API,{
-    method:"POST",
-    body:JSON.stringify({
-      action:"edit",
-      sheet:sheet,
-      oldValue:oldVal,
-      newValue:newVal
-    })
-  });
+let newVal = prompt("Edit value", oldVal);
+if(!newVal || newVal===oldVal) return;
 
-  refresh();
+await fetch(API,{
+method:"POST",
+body:JSON.stringify({
+type:"ledger",
+action:"edit",
+category:category,
+id:id,
+name:newVal
+})
+});
+
+refresh();
 }
 
 // ===== REFRESH =====
 function refresh(){
-  load("Sheet6","partyList");
-  load("Sheet7","fabricList");
-  load("Sheet8","skuList");
-  load("Sheet9","labourList");
+load("party","partyList");
+load("fabric","fabricList");
+load("sku","skuList");
+load("labour","labourList");
 }
 
 refresh();
