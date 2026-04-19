@@ -188,13 +188,61 @@ async function loadLedger(){
 
 try{
 
-// API CALLS
-let [p,f,s,l] = await Promise.all([
-fetch(API.ledgerGet("party")).then(r=>r.json()),
-fetch(API.ledgerGet("fabric")).then(r=>r.json()),
-fetch(API.ledgerGet("sku")).then(r=>r.json()),
-fetch(API.ledgerGet("labour")).then(r=>r.json())
+// 🔥 API CALLS (SAFE)
+let [pRes,fRes,sRes,lRes] = await Promise.all([
+fetch(API.ledgerGet("party")),
+fetch(API.ledgerGet("fabric")),
+fetch(API.ledgerGet("sku")),
+fetch(API.ledgerGet("labour"))
 ]);
+
+// 🔥 RAW TEXT (DEBUG FRIENDLY)
+let [pText,fText,sText,lText] = await Promise.all([
+pRes.text(),
+fRes.text(),
+sRes.text(),
+lRes.text()
+]);
+
+// 👉 DEBUG (agar error aaye to console me check karo)
+console.log("Party RAW:", pText);
+console.log("Fabric RAW:", fText);
+console.log("SKU RAW:", sText);
+console.log("Labour RAW:", lText);
+
+// 🔥 SAFE JSON PARSE
+let p = JSON.parse(pText);
+let f = JSON.parse(fText);
+let s = JSON.parse(sText);
+let l = JSON.parse(lText);
+
+// 🔥 STORE VALUES
+parties = p.map(x=>x.name);
+fabrics = f.map(x=>x.name);
+skus = s.map(x=>x.name);
+labours = l.map(x=>x.name);
+
+// 🔥 BIND UI
+partyList.innerHTML = parties.map(p=>`<option value="${p}">`).join("");
+fabricList.innerHTML = fabrics.map(f=>`<option value="${f}">`).join("");
+
+skuList.innerHTML = skus.map(s=>`<option value="${s}">`).join("");
+skuList2.innerHTML = skus.map(s=>`<option value="${s}">`).join("");
+skuList3.innerHTML = skus.map(s=>`<option value="${s}">`).join("");
+
+cutFabric.innerHTML = fabrics.map(f=>`<option>${f}</option>`).join("");
+
+labour.innerHTML = labours.map(l=>`<option>${l}</option>`).join("");
+labour2.innerHTML = labours.map(l=>`<option>${l}</option>`).join("");
+
+}catch(err){
+
+alert("Ledger Load Error ❌ (Check Console)");
+console.error("Ledger Error:", err);
+
+}
+
+}
 
 // STORE VALUES
 parties = p.map(x=>x.name);
