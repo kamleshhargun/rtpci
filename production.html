@@ -169,8 +169,8 @@ th,td{border:1px solid #ddd;padding:10px;text-align:center;}
 </div>
 </div>
 
+<script src="config.js"></script>
 <script>
-
 
 // ================= TAB =================
 function openTab(id,el){
@@ -181,16 +181,28 @@ document.querySelectorAll(".menu a").forEach(a=>a.classList.remove("active"));
 el.classList.add("active");
 }
 
-
-// ================= LEDGER LOAD =================
+// ================= LEDGER LOAD (API BASED) =================
 let parties=[], fabrics=[], skus=[], labours=[];
 
-function loadLedger(){
-parties = JSON.parse(localStorage.getItem("parties"))||[];
-fabrics = JSON.parse(localStorage.getItem("fabrics"))||[];
-skus = JSON.parse(localStorage.getItem("skus"))||[];
-labours = JSON.parse(localStorage.getItem("labours"))||[];
+async function loadLedger(){
 
+try{
+
+// API CALLS
+let [p,f,s,l] = await Promise.all([
+fetch(API.ledgerGet("party")).then(r=>r.json()),
+fetch(API.ledgerGet("fabric")).then(r=>r.json()),
+fetch(API.ledgerGet("sku")).then(r=>r.json()),
+fetch(API.ledgerGet("labour")).then(r=>r.json())
+]);
+
+// STORE VALUES
+parties = p.map(x=>x.name);
+fabrics = f.map(x=>x.name);
+skus = s.map(x=>x.name);
+labours = l.map(x=>x.name);
+
+// BIND TO UI
 partyList.innerHTML = parties.map(p=>`<option value="${p}">`).join("");
 fabricList.innerHTML = fabrics.map(f=>`<option value="${f}">`).join("");
 
@@ -202,34 +214,35 @@ cutFabric.innerHTML = fabrics.map(f=>`<option>${f}</option>`).join("");
 
 labour.innerHTML = labours.map(l=>`<option>${l}</option>`).join("");
 labour2.innerHTML = labours.map(l=>`<option>${l}</option>`).join("");
+
+}catch(err){
+alert("Ledger Load Error");
+console.error(err);
 }
 
+}
 
 // ================= VALIDATION =================
 function checkValid(val, list){
 return list.includes(val);
 }
 
-
-// ================= STORAGE =================
+// ================= STORAGE (LOCAL FOR NOW) =================
 let fabricData=JSON.parse(localStorage.getItem("fabricData"))||[];
 let cuttingData=JSON.parse(localStorage.getItem("cuttingData"))||[];
 let stitchingData=JSON.parse(localStorage.getItem("stitchingData"))||[];
 let finishedData=JSON.parse(localStorage.getItem("finishedData"))||[];
-
 
 // ================= STOCK =================
 function getStock(){
 
 let stock = {};
 
-// Fabric add
 fabricData.forEach(f=>{
 if(!stock[f.fabric]) stock[f.fabric]=0;
 stock[f.fabric]+=f.meter;
 });
 
-// Cutting minus
 cuttingData.forEach(c=>{
 if(stock[c.fabric]) stock[c.fabric]-=c.qty;
 });
@@ -237,19 +250,17 @@ if(stock[c.fabric]) stock[c.fabric]-=c.qty;
 return stock;
 }
 
-
 // ================= FABRIC INVOICE =================
-
 let fabricInvoices = JSON.parse(localStorage.getItem("fabricInvoices")) || [];
 
-// ===== AUTO DATE + FOCUS =====
+// AUTO DATE + FOCUS
 window.addEventListener("load", ()=>{
-  let today = new Date().toISOString().split("T")[0];
-  document.getElementById("date").value = today;
-  document.getElementById("party").focus();
+let today = new Date().toISOString().split("T")[0];
+document.getElementById("date").value = today;
+document.getElementById("party").focus();
 });
 
-// ===== ADD ROW =====
+// ADD ROW
 function addRow(name="", meter="", rate=""){
 
 let div = document.createElement("div");
@@ -265,7 +276,7 @@ div.innerHTML = `
 document.getElementById("fabricRows").appendChild(div);
 }
 
-// ===== SAVE =====
+// SAVE INVOICE
 function saveInvoice(){
 
 let party = partyInput();
@@ -274,7 +285,7 @@ let gst = Number(document.getElementById("gst").value) || 5;
 
 let rows = document.querySelectorAll("#fabricRows .row");
 
-let fabrics = [];
+let fabricsArr = [];
 let subtotal = 0;
 
 rows.forEach(r=>{
@@ -283,14 +294,20 @@ let meter = Number(r.querySelector(".meter").value);
 let rate = Number(r.querySelector(".rate").value);
 
 if(name && meter && rate){
+
+if(!checkValid(name,fabrics)){
+alert("Invalid Fabric: " + name);
+return;
+}
+
 let amount = meter * rate;
 subtotal += amount;
 
-fabrics.push({name, meter, rate, amount});
+fabricsArr.push({name, meter, rate, amount});
 }
 });
 
-if(!party || fabrics.length===0){
+if(!party || fabricsArr.length===0){
 alert("Fill required fields");
 return;
 }
@@ -299,7 +316,7 @@ let gstAmount = subtotal * gst / 100;
 let total = subtotal + gstAmount;
 
 fabricInvoices.push({
-party, date, gst, subtotal, gstAmount, total, fabrics
+party, date, gst, subtotal, gstAmount, total, fabrics:fabricsArr
 });
 
 localStorage.setItem("fabricInvoices", JSON.stringify(fabricInvoices));
@@ -308,7 +325,7 @@ renderFabric();
 clearForm();
 }
 
-// ===== RENDER =====
+// RENDER
 function renderFabric(){
 
 fabricTable.innerHTML="";
@@ -355,13 +372,13 @@ fabricTable.innerHTML += row + drawer;
 });
 }
 
-// ===== TOGGLE =====
+// TOGGLE
 function toggle(i){
 let d = document.getElementById("d-"+i);
 d.style.display = d.style.display==="table-row" ? "none" : "table-row";
 }
 
-// ===== CLEAR =====
+// CLEAR
 function clearForm(){
 document.getElementById("party").value="";
 document.getElementById("fabricRows").innerHTML="";
@@ -370,19 +387,9 @@ addRow();
 document.getElementById("party").focus();
 }
 
-// ===== HELPERS =====
-function partyInput(){
-return document.getElementById("party").value;
-}
-
-function dateInput(){
-return document.getElementById("date").value;
-}
-
-// INIT
-addRow();
-renderFabric();
-
+// HELPERS
+function partyInput(){ return document.getElementById("party").value; }
+function dateInput(){ return document.getElementById("date").value; }
 
 // ================= STITCHING =================
 function saveStitching(){
@@ -411,7 +418,6 @@ stitchTable.innerHTML+=`
 });
 }
 
-
 // ================= FINISHED =================
 function saveFinished(){
 
@@ -439,14 +445,14 @@ finishTable.innerHTML+=`
 });
 }
 
-
 // ================= INIT =================
 loadLedger();
+addRow();
 renderFabric();
-renderCut();
 renderStitch();
 renderFinish();
 
+// 🔥 IMPORTANT
 window.addEventListener("focus",loadLedger);
 
 </script>
