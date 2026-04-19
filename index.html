@@ -239,7 +239,7 @@ function openPage(page, el){
   document.querySelectorAll(".menu a").forEach(a=>a.classList.remove("active"));
   el.classList.add("active");
 
-  document.getElementById("title").innerText = el.innerText;
+  document.getElementById("title").innerText = el.querySelector(".text").innerText;
 
   // 🔥 AUTO CLOSE (mobile feel)
   document.getElementById("sidebar").classList.remove("open");
