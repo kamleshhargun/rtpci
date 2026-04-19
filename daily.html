@@ -186,39 +186,36 @@ input{
 </div>
 
 <script src="config.js"></script>
-
 <script>
 
 // ===== GLOBAL =====
-let html5QrCode, orderId="", mode="Pickup", trackingData=null;
+let html5QrCode, orderId="", trackingData=null;
 let step="order";
+let mode="pickup"; // ✅ SINGLE SOURCE
 
 const beep=new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
 
-
-// ===== TOGGEL BUTTON=====
-let mode = "pickup";
-
+// ===== TOGGLE BUTTON =====
 function selectMode(type){
 
-  mode = type;
+  mode = type.toLowerCase();
 
-  // remove active
   document.getElementById("pickupBtn").classList.remove("active");
   document.getElementById("returnBtn").classList.remove("active");
 
-  // add active
   document.getElementById(type+"Btn").classList.add("active");
 
-  // 🔊 PLAY SOUND
+  // 🔊 sound
   let sound = document.getElementById("clickSound");
   sound.currentTime = 0;
-  sound.play();
+  sound.play().catch(()=>{});
 }
+
 // ===== SCAN FLOW =====
 function startOrder(){
 
 if(step==="order"){
+
 html5QrCode=new Html5Qrcode("reader");
 
 html5QrCode.start({facingMode:"environment"},{fps:20,qrbox:250},
@@ -248,7 +245,9 @@ setTimeout(resetFlow,800);
 }
 
 function stopScan(){
-if(html5QrCode) html5QrCode.stop().catch(()=>{});
+if(html5QrCode){
+html5QrCode.stop().catch(()=>{});
+}
 }
 
 // ===== MANUAL =====
@@ -289,7 +288,7 @@ function sendData(o,t){
 fetch(API.post,{
 method:"POST",
 body:JSON.stringify({
-mode:mode.toLowerCase(),
+mode:mode, // ✅ FIXED
 order_id:o,
 tracking:t
 })
@@ -450,7 +449,7 @@ manualTracking.addEventListener("keypress",e=>{
 if(e.key==="Enter") submitManual();
 });
 
-// AUTO LOAD
+// INIT
 loadDashboard();
 setInterval(loadDashboard,3000);
 
