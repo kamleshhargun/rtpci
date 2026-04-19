@@ -67,94 +67,110 @@ button{padding:6px 10px;border:none;border-radius:5px;color:#fff;cursor:pointer;
 <script src="config.js"></script>
 <script>
 
+// ===== SAFE TEXT (QUOTE FIX) =====
+function safeText(text){
+  return text.replace(/'/g, "\\'");
+}
+
 // ===== LOAD =====
 async function load(category, container){
+  try{
+    let res = await fetch(API + "?type=ledger&category=" + category);
+    let data = await res.json();
 
-let res = await fetch(API + "?type=ledger&category=" + category);
-let data = await res.json();
+    let box = document.getElementById(container);
+    box.innerHTML="";
 
-let box = document.getElementById(container);
-box.innerHTML="";
+    data.forEach(d=>{
+      box.innerHTML += `
+      <div>
+        ${d.name}
+        <div>
+          <button class="edit" onclick="edit('${category}',${d.id},'${safeText(d.name)}')">Edit</button>
+          <button class="delete" onclick="del('${category}',${d.id})">X</button>
+        </div>
+      </div>
+      `;
+    });
 
-data.forEach(d=>{
-box.innerHTML += `
-<div>
-  ${d.name}
-  <div>
-    <button class="edit" onclick="edit('${category}',${d.id},'${d.name}')">Edit</button>
-    <button class="delete" onclick="del('${category}',${d.id})">X</button>
-  </div>
-</div>
-`;
-});
+  }catch(err){
+    alert("Load Error: " + err);
+  }
 }
 
 // ===== ADD =====
 async function add(category,inputId){
 
-let val = document.getElementById(inputId).value.trim();
-if(!val) return alert("Enter value");
+  let val = document.getElementById(inputId).value.trim();
+  if(!val) return alert("Enter value");
 
-await fetch(API,{
-method:"POST",
-body:JSON.stringify({
-type:"ledger",
-action:"add",
-category:category,
-name:val
-})
-});
+  let res = await fetch(API,{
+    method:"POST",
+    body:JSON.stringify({
+      type:"ledger",
+      action:"add",
+      category:category,
+      name:val
+    })
+  });
 
-document.getElementById(inputId).value="";
-refresh();
+  let data = await res.json();
+
+  if(data.error){
+    alert(data.error);
+  }
+
+  document.getElementById(inputId).value="";
+  refresh();
 }
 
 // ===== DELETE =====
 async function del(category,id){
 
-if(!confirm("Delete this item?")) return;
+  if(!confirm("Delete this item?")) return;
 
-await fetch(API,{
-method:"POST",
-body:JSON.stringify({
-type:"ledger",
-action:"delete",
-category:category,
-id:id
-})
-});
+  await fetch(API,{
+    method:"POST",
+    body:JSON.stringify({
+      type:"ledger",
+      action:"delete",
+      category:category,
+      id:id
+    })
+  });
 
-refresh();
+  refresh();
 }
 
 // ===== EDIT =====
 async function edit(category,id,oldVal){
 
-let newVal = prompt("Edit value", oldVal);
-if(!newVal || newVal===oldVal) return;
+  let newVal = prompt("Edit value", oldVal);
+  if(!newVal || newVal===oldVal) return;
 
-await fetch(API,{
-method:"POST",
-body:JSON.stringify({
-type:"ledger",
-action:"edit",
-category:category,
-id:id,
-name:newVal
-})
-});
+  await fetch(API,{
+    method:"POST",
+    body:JSON.stringify({
+      type:"ledger",
+      action:"edit",
+      category:category,
+      id:id,
+      name:newVal
+    })
+  });
 
-refresh();
+  refresh();
 }
 
 // ===== REFRESH =====
 function refresh(){
-load("party","partyList");
-load("fabric","fabricList");
-load("sku","skuList");
-load("labour","labourList");
+  load("party","partyList");
+  load("fabric","fabricList");
+  load("sku","skuList");
+  load("labour","labourList");
 }
 
+// INIT
 refresh();
 
 </script>
