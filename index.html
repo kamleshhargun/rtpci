@@ -33,29 +33,13 @@ body{
 
 /* LOGO */
 .logo{
-  text-align:center;
+ text-align:center;
   padding:15px;
+  cursor:pointer; /* 👈 add this */
 }
 
 .logo img{
   width:40px;
-}
-
-/* TOGGLE BUTTON */
-.toggle-btn{
-  position:absolute;
-  top:10px;
-  right:-15px;
-  background:#007bff;
-  color:#fff;
-  border-radius:50%;
-  width:30px;
-  height:30px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  font-size:18px;
 }
 
 /* MENU */
@@ -157,13 +141,9 @@ iframe{
 <div class="sidebar" id="sidebar">
 
   <!-- LOGO -->
-  <div class="logo">
-    <!-- 👇 apna logo yaha rakho -->
-    <img src="assets/kone-logo.png">
-  </div>
-
-  <!-- TOGGLE -->
-  <div class="toggle-btn" onclick="toggleMenu()">☰</div>
+  <div class="logo" onclick="toggleMenu()">
+  <img src="assets/fevi.png">
+</div>
 
   <!-- MENU -->
   <div class="menu">
