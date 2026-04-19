@@ -55,6 +55,39 @@ input{
 }
 .stat span{font-weight:bold;color:#007bff;}
 #manualBox,#extraBox,#saveBtn{display:none;}
+.toggle-group{
+  display:flex;
+  gap:15px;
+  margin-top:15px;
+}
+
+/* DEFAULT (UNSELECTED) */
+.toggle-btn{
+  flex:1;
+  padding:14px;
+  text-align:center;
+  background:#e0e0e0;
+  border-radius:50px; /* round */
+  font-weight:bold;
+  cursor:pointer;
+
+  transition:all 0.35s ease;
+  transform:scale(0.95);
+}
+
+/* HOVER EFFECT */
+.toggle-btn:hover{
+  transform:scale(1);
+}
+
+/* ACTIVE (SELECTED) */
+.toggle-btn.active{
+  background:#007bff;
+  color:#fff;
+  border-radius:10px; /* square */
+  transform:scale(1.05);
+  box-shadow:0 4px 12px rgba(0,0,0,0.2);
+}
 </style>
 </head>
 
@@ -87,10 +120,20 @@ input{
 </div>
 
 <!-- ===== MODE ===== -->
-<div class="card">
-<button id="pickupBtn" class="mode-btn active" onclick="setMode('Pickup')">Pickup</button>
-<button id="returnBtn" class="mode-btn" onclick="setMode('Return')">Return</button>
+<div class="toggle-group">
+
+  <div id="pickupBtn" class="toggle-btn active" onclick="selectMode('pickup')">
+    Pickup
+  </div>
+
+  <div id="returnBtn" class="toggle-btn" onclick="selectMode('return')">
+    Return
+  </div>
+
 </div>
+
+<!-- 🔊 SOUND -->
+<audio id="clickSound" src="https://actions.google.com/sounds/v1/cartoon/pop.ogg"></audio>
 
 <!-- ===== SCANNER ===== -->
 <div class="card">
@@ -152,15 +195,26 @@ let step="order";
 
 const beep=new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
 
-// ===== MODE =====
-function setMode(m){
-mode=m;
-pickupBtn.classList.remove("active");
-returnBtn.classList.remove("active");
-(m==="Pickup"?pickupBtn:returnBtn).classList.add("active");
-resetFlow();
-}
 
+// ===== TOGGEL BUTTON=====
+let mode = "pickup";
+
+function selectMode(type){
+
+  mode = type;
+
+  // remove active
+  document.getElementById("pickupBtn").classList.remove("active");
+  document.getElementById("returnBtn").classList.remove("active");
+
+  // add active
+  document.getElementById(type+"Btn").classList.add("active");
+
+  // 🔊 PLAY SOUND
+  let sound = document.getElementById("clickSound");
+  sound.currentTime = 0;
+  sound.play();
+}
 // ===== SCAN FLOW =====
 function startOrder(){
 
