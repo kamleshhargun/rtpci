@@ -6,7 +6,7 @@
 
 <style>
 body{font-family:Arial;margin:0;background:#f4f6f9;}
-
+.row{display:flex;gap:10px;margin-bottom:5px;}
 .menu{display:flex;background:#111;}
 .menu a{flex:1;padding:12px;color:#fff;text-align:center;cursor:pointer;}
 .menu a.active{background:#007bff;}
@@ -46,15 +46,40 @@ th,td{border:1px solid #ddd;padding:10px;text-align:center;}
 <div class="box">
 <h3>Fabric Purchase</h3>
 
-<input list="partyList" id="party">
-<datalist id="partyList"></datalist>
+<input type="date" id="date">
 
-<input list="fabricList" id="fabricInput">
-<datalist id="fabricList"></datalist>
+<br>
 
-<input id="meter" placeholder="Meter">
+<input list="partyList" id="party" placeholder="Party Name">
 
-<button class="save" onclick="saveFabric()">Save</button>
+<br>
+
+<div id="fabricRows"></div>
+
+<button onclick="addRow()" class="add">+ Add Fabric</button>
+
+<br><br>
+
+<input id="gst" value="5" placeholder="GST %">
+
+<br><br>
+
+<button class="save" onclick="saveInvoice()">Save</button>
+
+</div>
+
+<table>
+<thead>
+<tr>
+<th>Party</th>
+<th>Date</th>
+<th>Subtotal</th>
+<th>GST</th>
+<th>Total</th>
+</tr>
+</thead>
+<tbody id="fabricTable"></tbody>
+</table>
 
 </div>
 
@@ -213,76 +238,150 @@ return stock;
 }
 
 
-// ================= FABRIC =================
-function saveFabric(){
+// ================= FABRIC INVOICE =================
 
-if(!checkValid(party.value, parties)) return alert("Invalid Party");
-if(!checkValid(fabricInput.value, fabrics)) return alert("Invalid Fabric");
+let fabricInvoices = JSON.parse(localStorage.getItem("fabricInvoices")) || [];
 
-fabricData.push({
-party:party.value,
-fabric:fabricInput.value,
-meter:Number(meter.value)
+// ===== AUTO DATE + FOCUS =====
+window.addEventListener("load", ()=>{
+  let today = new Date().toISOString().split("T")[0];
+  document.getElementById("date").value = today;
+  document.getElementById("party").focus();
 });
 
-localStorage.setItem("fabricData",JSON.stringify(fabricData));
-renderFabric();
+// ===== ADD ROW =====
+function addRow(name="", meter="", rate=""){
+
+let div = document.createElement("div");
+div.className = "row";
+
+div.innerHTML = `
+<input list="fabricList" class="fabric" placeholder="Fabric" value="${name}">
+<input type="number" class="meter" placeholder="Meter" value="${meter}">
+<input type="number" class="rate" placeholder="Rate" value="${rate}">
+<button class="delete" onclick="this.parentElement.remove()">X</button>
+`;
+
+document.getElementById("fabricRows").appendChild(div);
 }
 
+// ===== SAVE =====
+function saveInvoice(){
+
+let party = partyInput();
+let date = dateInput();
+let gst = Number(document.getElementById("gst").value) || 5;
+
+let rows = document.querySelectorAll("#fabricRows .row");
+
+let fabrics = [];
+let subtotal = 0;
+
+rows.forEach(r=>{
+let name = r.querySelector(".fabric").value;
+let meter = Number(r.querySelector(".meter").value);
+let rate = Number(r.querySelector(".rate").value);
+
+if(name && meter && rate){
+let amount = meter * rate;
+subtotal += amount;
+
+fabrics.push({name, meter, rate, amount});
+}
+});
+
+if(!party || fabrics.length===0){
+alert("Fill required fields");
+return;
+}
+
+let gstAmount = subtotal * gst / 100;
+let total = subtotal + gstAmount;
+
+fabricInvoices.push({
+party, date, gst, subtotal, gstAmount, total, fabrics
+});
+
+localStorage.setItem("fabricInvoices", JSON.stringify(fabricInvoices));
+
+renderFabric();
+clearForm();
+}
+
+// ===== RENDER =====
 function renderFabric(){
+
 fabricTable.innerHTML="";
-fabricData.forEach((f,i)=>{
-fabricTable.innerHTML+=`
+
+fabricInvoices.forEach((inv,i)=>{
+
+let row = `
+<tr onclick="toggle(${i})">
+<td>${inv.party}</td>
+<td>${inv.date}</td>
+<td>${inv.subtotal}</td>
+<td>${inv.gst}%</td>
+<td>${inv.total}</td>
+</tr>
+`;
+
+let drawer = `
+<tr id="d-${i}" class="drawer">
+<td colspan="5">
+
+<table width="100%">
+<tr><th>Fabric</th><th>Meter</th><th>Rate</th><th>Amount</th></tr>
+
+${inv.fabrics.map(f=>`
 <tr>
-<td>${f.party}</td>
-<td>${f.fabric}</td>
+<td>${f.name}</td>
 <td>${f.meter}</td>
-<td><button class="delete" onclick="deleteFabric(${i})">X</button></td>
-</tr>`;
+<td>${f.rate}</td>
+<td>${f.amount}</td>
+</tr>
+`).join("")}
+
+</table>
+
+<br>
+Subtotal: ${inv.subtotal} | GST: ${inv.gstAmount} | Total: ${inv.total}
+
+</td>
+</tr>
+`;
+
+fabricTable.innerHTML += row + drawer;
+
 });
 }
 
-function deleteFabric(i){
-if(confirm("Delete?")){
-fabricData.splice(i,1);
-localStorage.setItem("fabricData",JSON.stringify(fabricData));
+// ===== TOGGLE =====
+function toggle(i){
+let d = document.getElementById("d-"+i);
+d.style.display = d.style.display==="table-row" ? "none" : "table-row";
+}
+
+// ===== CLEAR =====
+function clearForm(){
+document.getElementById("party").value="";
+document.getElementById("fabricRows").innerHTML="";
+document.getElementById("gst").value="5";
+addRow();
+document.getElementById("party").focus();
+}
+
+// ===== HELPERS =====
+function partyInput(){
+return document.getElementById("party").value;
+}
+
+function dateInput(){
+return document.getElementById("date").value;
+}
+
+// INIT
+addRow();
 renderFabric();
-}
-}
-
-
-// ================= CUTTING =================
-function saveCutting(){
-
-if(!checkValid(cutSku.value, skus)) return alert("Invalid SKU");
-
-let stock = getStock();
-
-if((stock[cutFabric.value]||0) < cutQty.value){
-return alert("Not enough fabric stock");
-}
-
-cuttingData.push({
-fabric:cutFabric.value,
-sku:cutSku.value,
-qty:Number(cutQty.value)
-});
-
-localStorage.setItem("cuttingData",JSON.stringify(cuttingData));
-renderCut();
-}
-
-function renderCut(){
-cutTable.innerHTML="";
-cuttingData.forEach(c=>{
-cutTable.innerHTML+=`
-<tr>
-<td>${c.fabric}</td>
-<td>${c.sku}</td>
-<td>${c.qty}</td>
-</tr>`;
-});
-}
 
 
 // ================= STITCHING =================
