@@ -13,9 +13,10 @@ h1{text-align:center;}
 
 input{padding:8px;margin:5px;}
 
-button{padding:8px 12px;border:none;border-radius:5px;color:#fff;cursor:pointer;}
+button{padding:6px 10px;border:none;border-radius:5px;color:#fff;cursor:pointer;}
 .add{background:green;}
 .delete{background:red;}
+.edit{background:orange;}
 
 .list div{
   background:#fafafa;
@@ -33,35 +34,31 @@ button{padding:8px 12px;border:none;border-radius:5px;color:#fff;cursor:pointer;
 <div class="container">
 <h1>📒 Production Ledger</h1>
 
-<!-- PARTY -->
 <div class="box">
 <h3>Party</h3>
-<input id="partyInput" placeholder="Party Name">
-<button class="add" onclick="addItem('parties','partyInput')">Add</button>
+<input id="partyInput">
+<button class="add" onclick="add('Sheet6','partyInput')">Add</button>
 <div id="partyList" class="list"></div>
 </div>
 
-<!-- FABRIC -->
 <div class="box">
 <h3>Fabric</h3>
-<input id="fabricInput" placeholder="Fabric Name">
-<button class="add" onclick="addItem('fabrics','fabricInput')">Add</button>
+<input id="fabricInput">
+<button class="add" onclick="add('Sheet7','fabricInput')">Add</button>
 <div id="fabricList" class="list"></div>
 </div>
 
-<!-- SKU -->
 <div class="box">
 <h3>SKU</h3>
-<input id="skuInput" placeholder="SKU Name">
-<button class="add" onclick="addItem('skus','skuInput')">Add</button>
+<input id="skuInput">
+<button class="add" onclick="add('Sheet8','skuInput')">Add</button>
 <div id="skuList" class="list"></div>
 </div>
 
-<!-- LABOUR -->
 <div class="box">
 <h3>Labour</h3>
-<input id="labourInput" placeholder="Labour Name">
-<button class="add" onclick="addItem('labours','labourInput')">Add</button>
+<input id="labourInput">
+<button class="add" onclick="add('Sheet9','labourInput')">Add</button>
 <div id="labourList" class="list"></div>
 </div>
 
@@ -69,65 +66,88 @@ button{padding:8px 12px;border:none;border-radius:5px;color:#fff;cursor:pointer;
 
 <script>
 
-function getData(key){
-  return JSON.parse(localStorage.getItem(key)) || [];
-}
+// ===== LOAD =====
+async function load(sheet, container){
+  let res = await fetch(API + "?type=get&sheet=" + sheet);
+  let data = await res.json();
 
-function saveData(key,data){
-  localStorage.setItem(key,JSON.stringify(data));
-}
+  let box = document.getElementById(container);
+  box.innerHTML="";
 
-// ADD
-function addItem(key,inputId){
-  let val=document.getElementById(inputId).value.trim();
-  if(!val)return alert("Enter value");
-
-  let data=getData(key);
-
-  if(data.includes(val)){
-    alert("Already exists");
-    return;
-  }
-
-  data.push(val);
-  saveData(key,data);
-
-  document.getElementById(inputId).value="";
-  renderAll();
-}
-
-// DELETE
-function deleteItem(key,index){
-  let data=getData(key);
-  data.splice(index,1);
-  saveData(key,data);
-  renderAll();
-}
-
-// RENDER
-function render(key,container){
-  let data=getData(key);
-  let div=document.getElementById(container);
-  div.innerHTML="";
-
-  data.forEach((d,i)=>{
-    div.innerHTML+=`
+  data.forEach(d=>{
+    box.innerHTML += `
       <div>
         ${d}
-        <button class="delete" onclick="deleteItem('${key}',${i})">X</button>
+        <div>
+          <button class="edit" onclick="edit('${sheet}','${d}')">Edit</button>
+          <button class="delete" onclick="del('${sheet}','${d}')">X</button>
+        </div>
       </div>
     `;
   });
 }
 
-function renderAll(){
-  render("parties","partyList");
-  render("fabrics","fabricList");
-  render("skus","skuList");
-  render("labours","labourList");
+// ===== ADD =====
+async function add(sheet,inputId){
+  let val = document.getElementById(inputId).value.trim();
+  if(!val) return alert("Enter value");
+
+  await fetch(API,{
+    method:"POST",
+    body:JSON.stringify({
+      action:"add",
+      sheet:sheet,
+      value:val
+    })
+  });
+
+  document.getElementById(inputId).value="";
+  refresh();
 }
 
-renderAll();
+// ===== DELETE =====
+async function del(sheet,val){
+  if(!confirm("Delete this item?")) return;
+
+  await fetch(API,{
+    method:"POST",
+    body:JSON.stringify({
+      action:"delete",
+      sheet:sheet,
+      value:val
+    })
+  });
+
+  refresh();
+}
+
+// ===== EDIT =====
+async function edit(sheet,oldVal){
+  let newVal = prompt("Edit value", oldVal);
+  if(!newVal || newVal === oldVal) return;
+
+  await fetch(API,{
+    method:"POST",
+    body:JSON.stringify({
+      action:"edit",
+      sheet:sheet,
+      oldValue:oldVal,
+      newValue:newVal
+    })
+  });
+
+  refresh();
+}
+
+// ===== REFRESH =====
+function refresh(){
+  load("Sheet6","partyList");
+  load("Sheet7","fabricList");
+  load("Sheet8","skuList");
+  load("Sheet9","labourList");
+}
+
+refresh();
 
 </script>
 
