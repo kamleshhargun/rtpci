@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,7 +25,6 @@ body{
   color:#fff;
   transition:0.3s;
   overflow:hidden;
-  position:relative;
 }
 
 .sidebar.open{
@@ -33,9 +33,9 @@ body{
 
 /* LOGO */
 .logo{
- text-align:center;
+  text-align:center;
   padding:15px;
-  cursor:pointer; /* 👈 add this */
+  cursor:pointer;
 }
 
 .logo img{
@@ -46,6 +46,7 @@ body{
 .logo:hover img{
   transform:scale(1.1);
 }
+
 /* MENU */
 .menu{
   margin-top:20px;
@@ -137,49 +138,53 @@ iframe{
   }
 }
 </style>
+
 </head>
 
 <body>
 
 <!-- ===== SIDEBAR ===== -->
+
 <div class="sidebar" id="sidebar">
 
   <!-- LOGO -->
+
   <div class="logo" onclick="toggleMenu()">
-  <img src="assets/fevi.png">
-</div>
+    <img src="assets/fevi.png">
+  </div>
 
   <!-- MENU -->
+
   <div class="menu">
-    <a class="active" onclick="showHome(this)">
-      <span class="icon">🏠</span>
-      <span class="text">Home</span>
-    </a>
 
-    <a onclick="openPage('daily.html', this)">
-      <span class="icon">📦</span>
-      <span class="text">Daily Scan</span>
-    </a>
+```
+<a class="active" onclick="showHome(this)">
+  <span class="icon">🏠</span>
+  <span class="text">Home</span>
+</a>
 
-    <a onclick="openPage('production.html', this)">
-      <span class="icon">🏭</span>
-      <span class="text">Production</span>
-    </a>
+<a onclick="openPage('daily.html', this)">
+  <span class="icon">📦</span>
+  <span class="text">Daily Scan</span>
+</a>
 
-    <a onclick="openPage('production-ledger.html', this)">
-      <span class="icon">📒</span>
-      <span class="text">Ledger</span>
-    </a>
+<a onclick="openPage('production/production.html', this)">
+  <span class="icon">🏭</span>
+  <span class="text">Production</span>
+</a>
 
-    <a onclick="openPage('return-request.html', this)">
-      <span class="icon">↩️</span>
-      <span class="text">Return Request</span>
-    </a>
+<a onclick="openPage('return-request.html', this)">
+  <span class="icon">↩️</span>
+  <span class="text">Return Request</span>
+</a>
+```
+
   </div>
 
 </div>
 
 <!-- ===== MAIN ===== -->
+
 <div class="main">
 
   <div class="header">
@@ -187,39 +192,40 @@ iframe{
   </div>
 
   <!-- DASHBOARD -->
+
   <div id="home" class="dashboard">
 
-    <div class="card">
-      <h3>📦 Today Pickup</h3>
-      <div class="big">120</div>
-    </div>
+```
+<div class="card">
+  <h3>📦 Today Pickup</h3>
+  <div class="big" id="pickup_today">0</div>
+</div>
 
-    <div class="card">
-      <h3>🔁 Today Return</h3>
-      <div class="big">25</div>
-    </div>
+<div class="card">
+  <h3>🔁 Today Return</h3>
+  <div class="big" id="return_today">0</div>
+</div>
 
-    <div class="card">
-      <h3>📊 Total Orders</h3>
-      <div class="big">850</div>
-    </div>
+<div class="card">
+  <h3>📊 Total Pickup</h3>
+  <div class="big" id="pickup_total">0</div>
+</div>
 
-    <div class="card">
-      <h3>🚚 In Transit</h3>
-      <div class="big">310</div>
-    </div>
-
-    <div class="card">
-      <h3>💰 Revenue</h3>
-      <div class="big">₹1.2L</div>
-    </div>
+<div class="card">
+  <h3>📊 Total Return</h3>
+  <div class="big" id="return_total">0</div>
+</div>
+```
 
   </div>
 
   <!-- IFRAME -->
+
   <iframe id="frame"></iframe>
 
 </div>
+
+<script src="config.js"></script>
 
 <script>
 
@@ -241,7 +247,6 @@ function openPage(page, el){
 
   document.getElementById("title").innerText = el.querySelector(".text").innerText;
 
-  // 🔥 AUTO CLOSE (mobile feel)
   document.getElementById("sidebar").classList.remove("open");
 }
 
@@ -258,6 +263,25 @@ function showHome(el){
 
   document.getElementById("sidebar").classList.remove("open");
 }
+
+// ===== LOAD DASHBOARD =====
+async function loadDashboard(){
+  try{
+    let res = await fetch(API.stats);
+    let d = await res.json();
+
+    document.getElementById("pickup_today").innerText = d.todayPickup || 0;
+    document.getElementById("return_today").innerText = d.todayReturn || 0;
+    document.getElementById("pickup_total").innerText = d.totalPickup || 0;
+    document.getElementById("return_total").innerText = d.totalReturn || 0;
+
+  }catch(err){
+    console.error("Dashboard Error:", err);
+  }
+}
+
+// INIT
+loadDashboard();
 
 </script>
 
