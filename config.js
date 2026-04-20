@@ -13,8 +13,8 @@ const API = {
     "&tracking=" + encodeURIComponent(tracking),
 
   // ✅ LEDGER GET
-  ledgerGet: (category) =>
-    API_BASE + "?type=ledger&category=" + category,
+ ledgerGet:(cat)=> API_BASE + "?type=ledger&category=" + cat,
+fabricSave: API_BASE
 
   // ✅ LEDGER POST (add/edit/delete)
   ledgerPost: API_BASE,
