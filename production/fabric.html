@@ -1,85 +1,204 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Fabric</title>
+<meta charset="UTF-8">
+<title>Fabric Purchase</title>
 
 <style>
 body{font-family:Arial;background:#f4f6f9;padding:20px;}
-.row{display:flex;gap:10px;margin-bottom:5px;}
-input{padding:8px;margin:5px;}
-button{padding:8px;border:none;color:#fff;}
+.container{max-width:1100px;margin:auto;}
+
+.box{
+  background:#fff;
+  padding:15px;
+  border-radius:10px;
+  margin-bottom:20px;
+}
+
+input{
+  padding:8px;
+  margin:5px;
+}
+
+.fabric-row{
+  display:flex;
+  gap:10px;
+  margin-bottom:5px;
+  align-items:center;
+}
+
+.fabric-row input{
+  flex:1;
+}
+
+button{
+  padding:8px 12px;
+  border:none;
+  border-radius:5px;
+  color:#fff;
+  cursor:pointer;
+}
+
 .add{background:green;}
 .save{background:black;}
-</style>
+.delete{background:red;}
 
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+}
+
+th,td{
+  border:1px solid #ddd;
+  padding:10px;
+  text-align:center;
+}
+
+.drawer{display:none;background:#fafafa;}
+</style>
 </head>
 
 <body>
 
-<h2>Fabric Purchase</h2>
+<div class="container">
+
+<div class="box">
+<h3>Fabric Purchase</h3>
 
 <input type="date" id="date">
-<input list="partyList" id="party" placeholder="Party">
-<datalist id="partyList"></datalist>
+<br>
+
+<input id="party" placeholder="Party Name">
+<input id="invoice" placeholder="Invoice No">
+
+<br>
 
 <div id="rows"></div>
+
 <button class="add" onclick="addRow()">+ Add Fabric</button>
 
 <br><br>
-<input id="gst" value="5">
+
+<input id="gst" value="5" placeholder="GST %">
 
 <br><br>
+
 <button class="save" onclick="save()">Save</button>
 
-<script src="config.js"></script>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>Party</th>
+<th>Invoice</th>
+<th>Date</th>
+<th>Subtotal</th>
+<th>GST</th>
+<th>Total</th>
+</tr>
+</thead>
+<tbody id="table"></tbody>
+</table>
+
+</div>
+
+<script src="../config.js"></script>
 
 <script>
 
-let parties=[], fabrics=[];
-
-async function loadLedger(){
-let p = await fetch(API_BASE+"?type=ledger&category=party").then(r=>r.json());
-let f = await fetch(API_BASE+"?type=ledger&category=fabric").then(r=>r.json());
-
-parties = p.map(x=>x.name);
-fabrics = f.map(x=>x.name);
-
-partyList.innerHTML = parties.map(p=>`<option value="${p}">`).join("");
+// AUTO DATE
+window.onload=()=>{
+let today=new Date().toISOString().split("T")[0];
+date.value=today;
+party.focus();
 }
 
-function valid(v,list){ return list.includes(v); }
+// ADD ROW
+function addRow(name="",meter="",rate=""){
 
-function addRow(){
-rows.innerHTML += `
-<div class="row">
-<input list="fabricList" class="f">
-<input class="m" type="number" placeholder="Meter">
-<input class="r" type="number" placeholder="Rate">
-</div>`;
+let div=document.createElement("div");
+div.className="fabric-row";
+
+div.innerHTML=`
+<input class="name" placeholder="Fabric" value="${name}">
+<input type="number" class="meter" placeholder="Meter" value="${meter}">
+<input type="number" class="rate" placeholder="Rate" value="${rate}">
+<button class="delete" onclick="removeRow(this)">X</button>
+`;
+
+rows.appendChild(div);
 }
 
-function save(){
+function removeRow(btn){
+if(rows.children.length===1){
+alert("Minimum 1 row required");
+return;
+}
+btn.parentElement.remove();
+}
 
-let ok=true;
+// SAVE
+async function save(){
 
-document.querySelectorAll(".row").forEach(r=>{
-let f=r.querySelector(".f").value;
-if(!valid(f,fabrics)){
-alert("Invalid Fabric: "+f);
-ok=false;
+let partyVal=party.value.trim();
+let invoiceVal=invoice.value.trim();
+let dateVal=date.value;
+let gstVal=Number(gst.value)||5;
+
+let fabrics=[];
+let subtotal=0;
+
+document.querySelectorAll(".fabric-row").forEach(r=>{
+let name=r.querySelector(".name").value;
+let meter=Number(r.querySelector(".meter").value);
+let rate=Number(r.querySelector(".rate").value);
+
+if(name && meter && rate){
+let amount=meter*rate;
+subtotal+=amount;
+fabrics.push({name,meter,rate,amount});
 }
 });
 
-if(!ok) return;
-
-alert("Saved ✔");
+if(!partyVal || !invoiceVal || fabrics.length===0){
+alert("Fill all fields");
+return;
 }
 
-window.onload=()=>{
-date.value=new Date().toISOString().split("T")[0];
+let res=await fetch(API.fabricSave,{
+method:"POST",
+body:JSON.stringify({
+type:"fabricSave",
+party:partyVal,
+invoice:invoiceVal,
+date:dateVal,
+gst:gstVal,
+fabrics:fabrics
+})
+});
+
+let data=await res.json();
+
+if(data.status==="saved"){
+alert("Saved to Sheet ✅");
+clearForm();
+}
+}
+
+// CLEAR
+function clearForm(){
+party.value="";
+invoice.value="";
+rows.innerHTML="";
+gst.value="5";
 addRow();
-loadLedger();
-};
+party.focus();
+}
+
+// INIT
+addRow();
 
 </script>
 
