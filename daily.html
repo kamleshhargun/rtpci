@@ -11,11 +11,13 @@ body{
   margin:0;
   text-align:center;
 }
+
 .container{
   max-width:420px;
   margin:auto;
   padding:15px;
 }
+
 .card{
   background:#fff;
   padding:15px;
@@ -23,6 +25,8 @@ body{
   margin-bottom:12px;
   box-shadow:0 6px 18px rgba(0,0,0,0.08);
 }
+
+/* ===== BUTTON ===== */
 button{
   width:100%;
   padding:10px;
@@ -32,12 +36,13 @@ button{
   font-weight:600;
   cursor:pointer;
 }
+
 .start{background:#28a745;color:#fff;}
 .stop{background:#dc3545;color:#fff;}
 .manual{background:#444;color:#fff;}
 .search{background:#6f42c1;color:#fff;}
-.mode-btn{background:#eee;}
-.mode-btn.active{background:#007bff;color:#fff;}
+
+/* ===== INPUT ===== */
 input{
   width:100%;
   padding:10px;
@@ -45,7 +50,13 @@ input{
   border-radius:8px;
   border:1px solid #ccc;
 }
-.stat{display:flex;justify-content:space-between;}
+
+/* ===== STATS ===== */
+.stat{
+  display:flex;
+  justify-content:space-between;
+}
+
 .stat div{
   flex:1;
   background:#f8f9fa;
@@ -53,41 +64,67 @@ input{
   padding:8px;
   border-radius:8px;
 }
-.stat span{font-weight:bold;color:#007bff;}
-#manualBox,#extraBox,#saveBtn{display:none;}
+
+.stat span{
+  font-weight:bold;
+  color:#007bff;
+}
+
+/* ===== HIDDEN ===== */
+#manualBox,
+#extraBox,
+#saveBtn{
+  display:none;
+}
+
+/* ===== TOGGLE GROUP ===== */
 .toggle-group{
   display:flex;
   gap:15px;
   margin-top:15px;
   margin-bottom:15px;
+
+  position:relative;
+  z-index:10; /* 🔥 IMPORTANT FIX */
 }
 
-/* DEFAULT (UNSELECTED) */
+/* ===== TOGGLE BUTTON ===== */
 .toggle-btn{
   flex:1;
   padding:12px;
   text-align:center;
   background:#e0e0e0;
-  border-radius:10px; /* square */
+  border-radius:10px;
   font-weight:bold;
   cursor:pointer;
 
   transition:all 0.35s ease;
   transform:scale(0.95);
+
+  /* 🔥 MOBILE FIX */
+  pointer-events:auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* HOVER EFFECT */
+/* HOVER */
 .toggle-btn:hover{
   transform:scale(1);
 }
 
-/* ACTIVE (SELECTED) */
+/* ACTIVE */
 .toggle-btn.active{
   background:#007bff;
   color:#fff;
-  border-radius:50px; /* round */
+  border-radius:50px;
   transform:scale(1.05);
   box-shadow:0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* ===== SCANNER FIX (MOST IMPORTANT) ===== */
+#reader{
+  position:relative;
+  z-index:1;
 }
 </style>
 </head>
