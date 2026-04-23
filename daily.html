@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://unpkg.com/html5-qrcode"></script>
 
-<style>
+<style>  
 body{
   font-family:'Segoe UI', Arial;
   background:linear-gradient(135deg,#eef2f7,#dfe9f3);
@@ -123,6 +123,22 @@ input{
 
 /* ===== SCANNER FIX (MOST IMPORTANT) ===== */
 #reader{
+  position: relative;
+  z-index: 1;
+}
+
+#reader video{
+  width: 100%;
+  border-radius: 10px;
+
+  /* 🔥 CLICK FIX */
+  pointer-events: none;
+}
+
+.toggle-group{
+  position: relative;
+  z-index: 10;
+}{
   position:relative;
   z-index:1;
 }
